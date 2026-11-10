@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Calculadora de Preço · Pixel Ateliê</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--rosa:#E8457A;--rosa-esc:#C9306A;--roxo:#2A1F3D;--roxo-2:#4A4060;--creme:#FFF5EC;--borda:#EADFE8;--verde:#256B29;--verde-bg:#E7F3E8;--cinza:#8A8299;--amarelo:#FFD23F}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--creme);color:var(--roxo);font-family:Nunito,Arial,sans-serif;font-size:16px;line-height:1.45}
+  header{background:var(--roxo);color:#fff;text-align:center;padding:18px 16px}
+  header .logo{font-family:Fredoka,Arial;font-size:20px;font-weight:700}
+  header .logo span{color:var(--rosa)}
+  header h1{font-family:Fredoka,Arial;font-size:24px;margin-top:4px}
+  header p{color:#D9D2E6;font-size:14px}
+  main{max-width:560px;margin:0 auto;padding:18px 16px 48px}
+  fieldset{border:1px solid var(--borda);background:#fff;border-radius:8px;padding:14px 14px 6px;margin-bottom:14px}
+  legend{font-family:Fredoka,Arial;font-size:17px;padding:0 6px;color:var(--rosa)}
+  label{display:block;font-size:14px;font-weight:700;margin-bottom:10px}
+  label small{display:block;font-weight:500;color:var(--cinza);font-size:12px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  input,select{width:100%;margin-top:4px;padding:10px;border:1px solid var(--borda);border-radius:6px;font:700 16px Nunito,Arial;color:var(--roxo);background:#fff}
+  input:focus,select:focus{outline:2px solid var(--rosa);border-color:var(--rosa)}
+  .res{background:#fff;border:2px solid var(--rosa);border-radius:8px;overflow:hidden;margin-bottom:12px}
+  .res .cab{background:var(--rosa);color:#fff;font-family:Fredoka,Arial;font-size:17px;padding:10px 14px}
+  .res table{width:100%;border-collapse:collapse;font-size:15px}
+  .res td{padding:10px 14px;border-bottom:1px solid var(--borda)}
+  .res td:last-child{text-align:right;font-weight:800;white-space:nowrap}
+  .res tr.dest td{background:var(--verde-bg);color:var(--verde);font-size:17px}
+  .res tr.canal td{background:#FFF0F5;color:var(--rosa-esc);font-size:17px}
+  .nota{font-size:12px;color:var(--cinza);margin-top:6px}
+  .alerta{background:#FFF7D6;border:1px solid #F2DC8A;border-radius:6px;padding:10px 12px;font-size:14px;margin-bottom:12px;display:none}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">PIXEL <span>ATELIÊ</span></div>
+  <h1>Calculadora de Preço</h1>
+  <p>Preencha com os seus números. A conta atualiza sozinha.</p>
+</header>
+<main>
+  <fieldset>
+    <legend>1. Material da peça</legend>
+    <div class="row">
+      <label>Contas na peça<small>está no molde</small><input id="contas" type="number" min="0" value="150" inputmode="numeric"></label>
+      <label>Preço do pacote (R$)<input id="pacoteP" type="number" min="0" step="0.01" value="10" inputmode="decimal"></label>
+    </div>
+    <div class="row">
+      <label>Contas no pacote<input id="pacoteQ" type="number" min="1" value="1000" inputmode="numeric"></label>
+      <label>Argola, corrente ou ímã (R$)<input id="ferragem" type="number" min="0" step="0.01" value="0.40" inputmode="decimal"></label>
+    </div>
+    <label>Embalagem: saquinho, cartão, etiqueta (R$)<input id="emb" type="number" min="0" step="0.01" value="0.60" inputmode="decimal"></label>
+  </fieldset>
+
+  <fieldset>
+    <legend>2. Seu tempo e sua margem</legend>
+    <div class="row">
+      <label>Minutos pra fazer<small>montar, passar o ferro, embalar</small><input id="min" type="number" min="0" value="30" inputmode="numeric"></label>
+      <label>Valor da sua hora (R$)<small>quanto vale 1h sua</small><input id="hora" type="number" min="0" step="0.5" value="12" inputmode="decimal"></label>
+    </div>
+    <label>Margem pra lucro e reposição (%)<small>30% é um bom começo</small><input id="margem" type="number" min="0" value="30" inputmode="numeric"></label>
+  </fieldset>
+
+  <fieldset>
+    <legend>3. Onde você vai vender</legend>
+    <label>Canal
+      <select id="canal">
+        <option value="direto">Direto: WhatsApp, Instagram, feira (Pix)</option>
+        <option value="cartao">Direto no cartão (maquininha)</option>
+        <option value="shopee">Shopee (até R$79,99: 20% + R$4,50)</option>
+        <option value="ml">Mercado Livre (preencha a taxa da sua conta)</option>
+        <option value="outro">Outro (preencha a taxa)</option>
+      </select>
+    </label>
+    <div class="row">
+      <label>Comissão (%)<input id="pct" type="number" min="0" max="90" step="0.1" value="0" inputmode="decimal"></label>
+      <label>Taxa fixa por item (R$)<input id="fixa" type="number" min="0" step="0.01" value="0" inputmode="decimal"></label>
+    </div>
+    <p class="nota">As taxas mudam. Antes de anunciar, confira os valores na sua conta do marketplace ou da maquininha. Valores da Shopee conforme tabela vigente desde 01/10/2026.</p>
+  </fieldset>
+
+  <div class="alerta" id="alerta"></div>
+
+  <div class="res">
+    <div class="cab">Sua conta</div>
+    <table>
+      <tr><td>Material da peça</td><td id="rMat">-</td></tr>
+      <tr><td>Seu tempo</td><td id="rTempo">-</td></tr>
+      <tr><td>Custo total</td><td id="rCusto">-</td></tr>
+      <tr class="dest"><td>Preço sugerido na venda direta</td><td id="rPreco">-</td></tr>
+      <tr class="canal" id="linhaCanal"><td id="rCanalNome">Preço no canal</td><td id="rCanal">-</td></tr>
+      <tr><td>Lucro por peça, além do seu tempo</td><td id="rLucro">-</td></tr>
+    </table>
+  </div>
+  <p class="nota">Preço arredondado pra cima no valor redondo mais próximo. Quanto você vende depende do seu tempo, da sua região e do seu esforço; esta calculadora não é promessa de ganho.</p>
+</main>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var PRESETS = { direto: [0, 0], cartao: [4, 0], shopee: [20, 4.5], ml: [null, null], outro: [null, null] };
+  function n(id) { var v = parseFloat(String($(id).value).replace(",", ".")); return isFinite(v) ? v : 0; }
+  function brl(v) { return "R$ " + v.toFixed(2).replace(".", ","); }
+  function redondo(v) {
+    if (v <= 0) return 0;
+    if (v < 10) return Math.ceil(v * 2) / 2;
+    if (v < 30) return Math.ceil(v) - 0.10 >= v ? Math.ceil(v) - 0.10 : Math.ceil(v) + 0.90;
+    return Math.ceil(v / 5) * 5 - 0.10 >= v ? Math.ceil(v / 5) * 5 - 0.10 : Math.ceil(v / 5) * 5 + 4.90;
+  }
+  function calc() {
+    var porConta = n("pacoteQ") > 0 ? n("pacoteP") / n("pacoteQ") : 0;
+    var mat = n("contas") * porConta + n("ferragem") + n("emb");
+    var tempo = n("min") / 60 * n("hora");
+    var custo = mat + tempo;
+    var alvo = custo * (1 + n("margem") / 100);
+    var precoDireto = redondo(alvo);
+    var pct = n("pct") / 100, fixa = n("fixa");
+    var canal = $("canal").value;
+    $("rMat").textContent = brl(mat);
+    $("rTempo").textContent = brl(tempo);
+    $("rCusto").textContent = brl(custo);
+    $("rPreco").textContent = brl(precoDireto);
+    var alerta = $("alerta");
+    alerta.style.display = "none";
+    if (canal === "direto") {
+      $("linhaCanal").style.display = "none";
+      $("rLucro").textContent = brl(precoDireto - custo);
+    } else if (pct >= 0.9) {
+      $("linhaCanal").style.display = "none";
+      alerta.textContent = "Comissão alta demais: confira o valor digitado."; alerta.style.display = "block";
+    } else {
+      var precoCanal = redondo((alvo + fixa) / (1 - pct));
+      var recebe = precoCanal * (1 - pct) - fixa;
+      $("linhaCanal").style.display = "";
+      $("rCanalNome").textContent = "Preço no canal escolhido";
+      $("rCanal").textContent = brl(precoCanal);
+      $("rLucro").textContent = brl(recebe - custo);
+      if (canal === "shopee" && precoCanal - precoDireto > precoDireto * 0.4) {
+        alerta.textContent = "Na Shopee, a taxa fixa pesa muito em peça barata. Vale anunciar kits de 3 ou mais peças: a taxa fixa é cobrada uma vez por item anunciado.";
+        alerta.style.display = "block";
+      }
+    }
+  }
+  $("canal").addEventListener("change", function () {
+    var p = PRESETS[this.value];
+    if (p[0] !== null) { $("pct").value = p[0]; $("fixa").value = p[1]; }
+    else { $("pct").value = ""; $("fixa").value = ""; $("pct").focus(); }
+    calc();
+  });
+  document.querySelectorAll("input").forEach(function (i) { i.addEventListener("input", calc); });
+  calc();
+})();
+</script>
+</body>
+</html>
