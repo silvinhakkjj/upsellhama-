@@ -103,7 +103,7 @@
 
   /* ============ CONFIGURAÇÃO ============ */
   var LINK_SIM = "https://ggcheckout.app/checkout/v5/f5SOE2kqryUniC23kUPRJt";     // checkout do Guia (R$19,90)
-  var LINK_NAO = "COLE-AQUI-O-LINK-DO-DOWNSELL";             // downsell
+  var LINK_NAO = "/oferta";                                  // downsell (R$9,90), recebe as UTMs pelo script de navegação
   var IMG_MOCKUP = "https://pixelatelie.vercel.app/upsell1gg.webp";
   var PRECO = "R$ 19,90";
 
@@ -170,9 +170,7 @@
     prog(8);
     tela(
       '<h1>Descubra quanto cobrar pelas <span class="hl">peças que você montar</span></h1>' +
-      '<p class="sub">4 perguntas rápidas. A gente faz a conta com você e, no fim, mostra o seu plano.</p>' +
-      '<img src="' + IMG_MOCKUP + '" alt="Guia Venda suas Peças" style="width:100%;height:auto;border-radius:8px;border:1px solid var(--borda);margin-bottom:6px" onerror="this.style.display=\'none\'">' +
-      '<div class="cards3"><div><strong>4</strong>perguntas rápidas</div><div><strong>Sua conta</strong>com as suas respostas</div><div><strong>Seu plano</strong>no último passo</div></div>' +
+      '<p class="sub">4 perguntas rápidas. A gente faz a conta com você e, no fim, mostra o seu plano.</p>' +      '<div class="cards3"><div><strong>4</strong>perguntas rápidas</div><div><strong>Sua conta</strong>com as suas respostas</div><div><strong>Seu plano</strong>no último passo</div></div>' +
       '<button class="btn" id="go">Continuar →</button>'
     );
     document.getElementById("go").onclick = proximo;
@@ -278,6 +276,86 @@
   }
 
   intro();
+})();
+</script>
+
+<script>
+/* =========================================================
+   NAVEGAÇÃO: repasse de UTMs + back redirect com chave (só nesta página)
+   ========================================================= */
+(function () {
+  "use strict";
+  var CHECKOUT_PRINCIPAL = "f5SOE2kqryUniC23kUPRJt";
+  var OFERTA = "/oferta";
+  var MAX_MS = 30 * 60 * 1000;
+  var CHAVES = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "src", "sck", "fbclid"];
+
+  function ss(fn) { try { return fn(); } catch (e) { return null; } }
+  function queryLimpa() {
+    var p = new URLSearchParams(location.search); p.delete("ab_bk");
+    var q = p.toString(); return q ? "?" + q : "";
+  }
+  function comUtms(href) {
+    try {
+      var u = new URL(href, location.href), atual = new URLSearchParams(location.search);
+      CHAVES.forEach(function (k) { var v = atual.get(k); if (v && !u.searchParams.has(k)) u.searchParams.set(k, v); });
+      return u.toString();
+    } catch (e) { return href; }
+  }
+  function irOferta() {
+    ss(function () { sessionStorage.setItem("ab_back_visto", "1"); });
+    location.replace(OFERTA + queryLimpa());
+  }
+
+  /* A) chave ao ir pro checkout de R$19,90 + UTMs em todo link de compra */
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest && e.target.closest("a[href]");
+    if (!a) return;
+    var href = a.getAttribute("href");
+    var interno = href === OFERTA || href.indexOf(OFERTA + "?") === 0;
+    if (href.indexOf("ggcheckout.app") === -1 && !interno) return;
+    a.setAttribute("href", comUtms(href));
+    if (interno) { ss(function () { sessionStorage.setItem("ab_back_visto", "1"); }); return; }
+    if (href.indexOf(CHECKOUT_PRINCIPAL) > -1) {
+      var chave = Math.random().toString(36).slice(2, 10);
+      ss(function () { sessionStorage.setItem("ab_bk", chave); sessionStorage.setItem("ab_bk_t", String(Date.now())); });
+      var p = new URLSearchParams(location.search); p.set("ab_bk", chave);
+      history.replaceState(history.state, "", location.pathname + "?" + p.toString() + location.hash);
+    }
+  }, true);
+
+  /* B) voltou do checkout com a chave: vai pra /oferta */
+  function checarVolta(persisted) {
+    var url = new URLSearchParams(location.search), chave = url.get("ab_bk");
+    if (!chave) return;
+    var nav = ss(function () { return performance.getEntriesByType("navigation")[0]; });
+    var voltou = persisted || (nav && nav.type === "back_forward");
+    var salva = ss(function () { return sessionStorage.getItem("ab_bk"); });
+    var t = Number(ss(function () { return sessionStorage.getItem("ab_bk_t"); }) || 0);
+    if (voltou && chave === salva && Date.now() - t <= MAX_MS) {
+      ss(function () { sessionStorage.removeItem("ab_bk"); sessionStorage.removeItem("ab_bk_t"); });
+      irOferta();
+    } else {
+      history.replaceState(history.state, "", location.pathname + queryLimpa() + location.hash);
+    }
+  }
+  checarVolta(false);
+  window.addEventListener("pageshow", function (ev) { if (ev.persisted) checarVolta(true); });
+
+  /* C) tentou sair sem ir pro checkout: arma só depois da primeira interação real */
+  var armado = false;
+  function armar() {
+    if (armado) return; armado = true;
+    history.pushState({ abBack: 1 }, "", location.href);
+  }
+  ["pointerdown", "touchstart", "keydown"].forEach(function (ev) {
+    window.addEventListener(ev, armar, { once: true, passive: true });
+  });
+  window.addEventListener("popstate", function () {
+    if (!armado) return;
+    if (ss(function () { return sessionStorage.getItem("ab_back_visto"); })) { history.back(); return; }
+    irOferta();
+  });
 })();
 </script>
 </body>
