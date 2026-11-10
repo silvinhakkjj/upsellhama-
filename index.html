@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Seu acesso está liberado · Pixel Ateliê</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  /* =========================================================
+     CONFIGURAÇÃO: troque os dois links antes de subir
+     ========================================================= */
+  :root{
+    --rosa:#E8457A; --rosa-esc:#C9306A; --roxo:#2A1F3D; --roxo-2:#4A4060;
+    --creme:#FFF5EC; --borda:#EADFE8; --verde:#256B29; --verde-bg:#E7F3E8;
+    --amarelo:#FFD23F; --cinza:#8A8299;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--creme);color:var(--roxo);font-family:Nunito,Arial,sans-serif;font-size:16px;line-height:1.5}
+  .topo{background:var(--roxo);color:#fff;text-align:center;padding:10px 16px;font-weight:800;font-size:14px}
+  .passos{display:flex;justify-content:center;gap:6px;padding:12px 16px;background:#fff;border-bottom:1px solid var(--borda);font-size:12px;font-weight:700;color:var(--cinza)}
+  .passos span{display:flex;align-items:center;gap:5px}
+  .passos b{display:inline-flex;width:20px;height:20px;border-radius:50%;align-items:center;justify-content:center;background:var(--borda);color:var(--roxo);font-size:11px}
+  .passos .ok b{background:var(--verde);color:#fff}
+  .passos .at{color:var(--roxo)} .passos .at b{background:var(--rosa);color:#fff}
+  .barra{height:6px;background:var(--borda)} .barra i{display:block;height:100%;width:8%;background:var(--rosa);transition:width .4s}
+  main{max-width:560px;margin:0 auto;padding:24px 16px 48px}
+  h1,h2{font-family:Fredoka,Arial,sans-serif;line-height:1.15}
+  h1{font-size:28px;text-align:center;margin-bottom:10px}
+  h2{font-size:24px;text-align:center;margin-bottom:6px}
+  .sub{text-align:center;color:var(--roxo-2);margin-bottom:20px}
+  .hl{color:var(--rosa)}
+  .cards3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:18px 0 22px}
+  .cards3 div{background:#fff;border:1px solid var(--borda);border-radius:6px;padding:12px 6px;text-align:center;font-size:13px;color:var(--roxo-2)}
+  .cards3 strong{display:block;font-family:Fredoka,Arial;font-size:20px;color:var(--rosa)}
+  .btn{display:block;width:100%;border:0;border-radius:8px;background:var(--rosa);color:#fff;font-family:Fredoka,Arial;font-size:19px;font-weight:700;padding:16px;cursor:pointer;text-align:center;text-decoration:none;box-shadow:0 4px 0 var(--rosa-esc)}
+  .btn:active{transform:translateY(2px);box-shadow:0 2px 0 var(--rosa-esc)}
+  .btn[disabled]{opacity:.45;cursor:not-allowed}
+  .ops{display:grid;gap:10px;margin-bottom:18px}
+  .op{display:flex;align-items:center;gap:12px;width:100%;background:#fff;border:2px solid var(--borda);border-radius:8px;padding:14px;font:700 16px Nunito,Arial;color:var(--roxo);cursor:pointer;text-align:left}
+  .op .ic{flex:0 0 38px;height:38px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:20px}
+  .op.sel{border-color:var(--rosa);background:#FFF0F5}
+  .op .ck{margin-left:auto;width:22px;height:22px;border-radius:4px;border:2px solid var(--borda);flex:0 0 22px}
+  .op.sel .ck{background:var(--rosa);border-color:var(--rosa)}
+  .dica{font-size:13px;color:var(--cinza);text-align:center;margin:-8px 0 14px}
+  .pausa{background:#fff;border:1px solid var(--borda);border-left:4px solid var(--rosa);border-radius:6px;padding:18px;margin-bottom:18px}
+  .pausa h3{font-family:Fredoka,Arial;font-size:20px;margin-bottom:6px}
+  .carreg{text-align:center;padding:30px 0}
+  .carreg ul{list-style:none;display:inline-block;text-align:left;margin-top:16px}
+  .carreg li{padding:6px 0;color:var(--cinza);font-weight:700;transition:color .3s}
+  .carreg li.feito{color:var(--verde)}
+  .carreg li.feito::before{content:"✓ "}
+  .carreg li:not(.feito)::before{content:"• "}
+  .perfil{background:var(--roxo);color:#fff;border-radius:8px;padding:22px 18px;text-align:center;margin-bottom:14px}
+  .perfil .rot{font-size:12px;letter-spacing:2px;color:var(--amarelo);font-weight:800}
+  .perfil h2{color:#fff;margin:6px 0}
+  .perfil p{color:#D9D2E6;font-size:15px}
+  .resp{background:#fff;border:1px solid var(--borda);border-radius:6px;padding:14px;font-size:15px;margin-bottom:14px}
+  .conta{background:#fff;border:2px solid var(--rosa);border-radius:8px;overflow:hidden;margin-bottom:10px}
+  .conta .cab{background:var(--rosa);color:#fff;font-family:Fredoka,Arial;font-size:17px;padding:10px 14px}
+  .conta table{width:100%;border-collapse:collapse;font-size:15px}
+  .conta td{padding:10px 14px;border-bottom:1px solid var(--borda)}
+  .conta td:last-child{text-align:right;font-weight:800}
+  .conta tr.tot td{background:var(--verde-bg);color:var(--verde);font-size:16px;border-bottom:0}
+  .nota{font-size:12px;color:var(--cinza);margin-bottom:24px}
+  .oferta{background:#fff;border:1px solid var(--borda);border-radius:8px;padding:22px 18px;margin-bottom:18px}
+  .oferta img{width:100%;height:auto;border-radius:6px;margin:6px 0 14px}
+  .itens{list-style:none;margin:6px 0 18px}
+  .itens li{padding:8px 0 8px 30px;position:relative;border-bottom:1px dashed var(--borda);font-size:15px}
+  .itens li::before{content:"✓";position:absolute;left:4px;top:7px;color:#fff;background:var(--verde);width:19px;height:19px;border-radius:50%;font-size:12px;text-align:center;line-height:19px}
+  .preco{text-align:center;margin-bottom:14px}
+  .preco small{display:block;color:var(--roxo-2);font-size:14px}
+  .preco strong{display:block;font-family:Fredoka,Arial;font-size:46px;color:var(--rosa);line-height:1.1}
+  .selos{display:flex;justify-content:center;gap:14px;font-size:13px;color:var(--roxo-2);margin-top:10px;flex-wrap:wrap}
+  .nao{display:block;text-align:center;color:var(--cinza);font-size:15px;margin-top:14px;text-decoration:underline}
+  .garantia{display:flex;gap:12px;align-items:center;background:var(--verde-bg);border-radius:6px;padding:14px;margin-bottom:18px;font-size:14px}
+  .garantia b{font-size:30px}
+  .faq details{background:#fff;border:1px solid var(--borda);border-radius:6px;margin-bottom:8px}
+  .faq summary{padding:14px;font-weight:800;cursor:pointer}
+  .faq p{padding:0 14px 14px;color:var(--roxo-2);font-size:15px}
+  .aviso{font-size:12px;color:var(--cinza);text-align:center;margin-top:20px}
+  .tela{animation:entra .35s ease}
+  @keyframes entra{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  @media(max-width:380px){h1{font-size:24px}.cards3 strong{font-size:17px}}
+</style>
+</head>
+<body>
+
+<div class="topo">⚠️ NÃO FECHE ESTA PÁGINA · seu acesso já foi enviado no WhatsApp e no e-mail</div>
+<div class="passos">
+  <span class="ok"><b>✓</b>Compra aprovada</span>
+  <span class="at"><b>2</b>Seu plano</span>
+  <span><b>3</b>Seus moldes</span>
+</div>
+<div class="barra"><i id="barra"></i></div>
+
+<main id="app"></main>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ============ CONFIGURAÇÃO ============ */
+  var LINK_SIM = "https://ggcheckout.app/checkout/v5/f5SOE2kqryUniC23kUPRJt";     // checkout do Guia (R$19,90)
+  var LINK_NAO = "COLE-AQUI-O-LINK-DO-DOWNSELL";             // downsell
+  var IMG_MOCKUP = "https://pixelatelie.vercel.app/upsell1gg.webp";
+  var PRECO = "R$ 19,90";
+
+  /* Valores de referência por peça. Ajuste se a sua região for diferente.
+     min = minutos pra montar e passar o ferro | lo/hi = faixa de preço | mat = material */
+  var PECAS = {
+    chaveiro:   { nome: "chaveiros",      um: "chaveiro pequeno",      min: 30, lo: 10, hi: 15, mat: 2.50, ic: "🔑", cor: "#FFE1EC" },
+    ima:        { nome: "ímãs",           um: "ímã pequeno",           min: 30, lo: 10, hi: 15, mat: 2.80, ic: "🧲", cor: "#FFF3C4" },
+    lembranca:  { nome: "lembrancinhas",  um: "lembrancinha mini",     min: 15, lo: 6,  hi: 10, mat: 1.50, ic: "🎁", cor: "#D8F5EF" },
+    nome:       { nome: "peças com nome", um: "chaveiro com nome",     min: 45, lo: 15, hi: 25, mat: 4.00, ic: "🔤", cor: "#EBE2FF" }
+  };
+  var HORAS_SEMANA = { "2": 2, "5": 5, "8": 8, "fds": 4 };
+
+  var PERFIS = {
+    chaveiro:  ["Fábrica de Chaveiros", "Peça pequena, rápida e que todo mundo quer pendurar na mochila, na bolsa ou na chave."],
+    ima:       ["Ateliê de Ímãs", "Ímã vende em kit: um pra cada pessoa da casa, um de cada bichinho."],
+    lembranca: ["Festa Pronta", "Lembrancinha sai em lote: aniversário pede 10, 20, 30 de uma vez, todas iguais."],
+    nome:      ["Peça com Nome", "A peça personalizada é a que mais vale: o nome do filho, do casal, da professora."]
+  };
+  var PERFIL_CRIANCA = ["Negócio em Família", "A criança monta, vende pros conhecidos e aprende na prática quanto custa, quanto cobrar e quanto guardar."];
+
+  var PERGUNTAS = [
+    { id: "quem", titulo: "Pra quem são esses moldes?", ops: [
+      ["mim", "Pra mim", "🙋‍♀️", "#FFE1EC"],
+      ["crianca", "Pra uma criança", "🧒", "#FFF3C4"],
+      ["junto", "Pra montar junto com uma criança", "👩‍👧", "#D8F5EF"] ] },
+    { id: "pecas", multi: true, titulo: "Quais peças você gostaria de vender?", dica: "Pode marcar mais de uma", ops: [
+      ["chaveiro", "Chaveiros", "🔑", "#FFE1EC"],
+      ["ima", "Ímãs de geladeira", "🧲", "#FFF3C4"],
+      ["lembranca", "Lembrancinhas de festa", "🎁", "#D8F5EF"],
+      ["nome", "Peças com nome", "🔤", "#EBE2FF"] ] },
+    { pausa: ["Dá pra vender peça de contas?", "Dá. Chaveiro, ímã e lembrancinha estão entre as peças feitas à mão que mais saem pra presente. O segredo é cobrar certo: muita gente cobra só o material e trabalha de graça."] },
+    { id: "tempo", titulo: "Quanto tempo por semana você teria pra montar?", ops: [
+      ["2", "Umas 2 horas", "⏱️", "#FFE1EC"],
+      ["5", "De 3 a 5 horas", "⏱️", "#FFF3C4"],
+      ["8", "6 horas ou mais", "⏱️", "#D8F5EF"],
+      ["fds", "Só no fim de semana", "🌙", "#EBE2FF"] ] },
+    { id: "onde", titulo: "Onde você venderia primeiro?", ops: [
+      ["whats", "Pros conhecidos, no WhatsApp", "💬", "#D8F5EF"],
+      ["insta", "No Instagram", "📸", "#FFE1EC"],
+      ["feira", "Em feira ou na escola", "🛍️", "#FFF3C4"],
+      ["market", "Na Shopee ou Elo7", "🛒", "#EBE2FF"] ] }
+  ];
+
+  var ONDE_TXT = {
+    whats: "Pros conhecidos, a primeira venda costuma sair no mesmo dia: o guia traz como oferecer sem parecer insistente.",
+    insta: "No Instagram, foto boa vende mais que post bonito: o guia mostra como fotografar a peça com o celular.",
+    feira: "Em feira, preço visível e peça embalada vendem sozinhos: o guia traz a embalagem e a etiqueta.",
+    market: "No marketplace, a taxa come parte do preço: a calculadora do guia já desconta a taxa de cada um."
+  };
+
+  /* ============ MOTOR DO QUIZ ============ */
+  var app = document.getElementById("app");
+  var barra = document.getElementById("barra");
+  var resp = {}, passo = -1;
+  var totalPerg = PERGUNTAS.filter(function (p) { return !p.pausa; }).length;
+
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function brl(v) { return "R$ " + v.toFixed(2).replace(".", ","); }
+  function prog(p) { barra.style.width = p + "%"; }
+  function tela(html) { app.innerHTML = '<div class="tela">' + html + "</div>"; window.scrollTo(0, 0); }
+
+  function intro() {
+    prog(8);
+    tela(
+      '<h1>Descubra quanto cobrar pelas <span class="hl">peças que você montar</span></h1>' +
+      '<p class="sub">4 perguntas rápidas. A gente faz a conta com você e, no fim, mostra o seu plano.</p>' +
+      '<img src="' + IMG_MOCKUP + '" alt="Guia Venda suas Peças" style="width:100%;height:auto;border-radius:8px;border:1px solid var(--borda);margin-bottom:6px" onerror="this.style.display=\'none\'">' +
+      '<div class="cards3"><div><strong>4</strong>perguntas rápidas</div><div><strong>Sua conta</strong>com as suas respostas</div><div><strong>Seu plano</strong>no último passo</div></div>' +
+      '<button class="btn" id="go">Continuar →</button>'
+    );
+    document.getElementById("go").onclick = proximo;
+  }
+
+  function proximo() {
+    passo++;
+    if (passo >= PERGUNTAS.length) return carregando();
+    var p = PERGUNTAS[passo];
+    var feitas = PERGUNTAS.slice(0, passo).filter(function (x) { return !x.pausa; }).length;
+    prog(12 + Math.round(feitas / totalPerg * 70));
+    if (p.pausa) {
+      tela('<div class="pausa"><h3>' + esc(p.pausa[0]) + "</h3><p>" + esc(p.pausa[1]) + '</p></div><button class="btn" id="go">Continuar →</button>');
+      document.getElementById("go").onclick = proximo;
+      return;
+    }
+    var sel = p.multi ? [] : null;
+    var html = "<h2>" + esc(p.titulo) + "</h2>" + (p.dica ? '<p class="dica">' + esc(p.dica) + "</p>" : '<p class="dica">&nbsp;</p>') + '<div class="ops">';
+    p.ops.forEach(function (o) {
+      html += '<button class="op" data-v="' + o[0] + '"><span class="ic" style="background:' + o[3] + '">' + o[2] + "</span>" + esc(o[1]) + (p.multi ? '<span class="ck"></span>' : "") + "</button>";
+    });
+    html += "</div>" + (p.multi ? '<button class="btn" id="go" disabled>Continuar →</button>' : "");
+    tela(html);
+    app.querySelectorAll(".op").forEach(function (b) {
+      b.onclick = function () {
+        var v = b.getAttribute("data-v");
+        if (p.multi) {
+          var i = sel.indexOf(v);
+          if (i > -1) { sel.splice(i, 1); b.classList.remove("sel"); } else { sel.push(v); b.classList.add("sel"); }
+          document.getElementById("go").disabled = sel.length === 0;
+        } else {
+          b.classList.add("sel"); resp[p.id] = v; setTimeout(proximo, 220);
+        }
+      };
+    });
+    if (p.multi) document.getElementById("go").onclick = function () { resp[p.id] = sel.slice(); proximo(); };
+  }
+
+  function carregando() {
+    prog(88);
+    var etapas = ["Somando o custo do material", "Calculando o preço de cada peça", "Vendo quantas peças cabem no seu tempo", "Montando o seu plano"];
+    tela('<div class="carreg"><h2>Fazendo a sua conta…</h2><ul>' + etapas.map(function (e) { return "<li>" + e + "</li>"; }).join("") + "</ul></div>");
+    var lis = app.querySelectorAll(".carreg li");
+    lis.forEach(function (li, k) { setTimeout(function () { li.classList.add("feito"); }, 450 + k * 520); });
+    setTimeout(resultado, 450 + lis.length * 520 + 400);
+  }
+
+  function resultado() {
+    prog(96);
+    var lista = resp.pecas && resp.pecas.length ? resp.pecas : ["chaveiro"];
+    var k = lista[0], p = PECAS[k];
+    var perf = resp.quem === "crianca" ? PERFIL_CRIANCA : PERFIS[k];
+    var h = HORAS_SEMANA[resp.tempo] || 2;
+    var porSemana = Math.max(1, Math.floor(h * 60 / p.min));
+    var precoMedio = (p.lo + p.hi) / 2;
+    var sobraPeca = precoMedio - p.mat;
+    var exemplo = 10;
+    var nomes = lista.map(function (x) { return PECAS[x].nome; });
+    var listaTxt = nomes.length > 1 ? nomes.slice(0, -1).join(", ") + " e " + nomes.slice(-1) : nomes[0];
+    var tempoTxt = { "2": "umas 2 horas por semana", "5": "de 3 a 5 horas por semana", "8": "6 horas ou mais por semana", "fds": "só o fim de semana" }[resp.tempo];
+    var quem = resp.quem === "crianca" ? "A criança quer vender" : "Você quer vender";
+
+    tela(
+      '<div class="perfil"><div class="rot">SEU PERFIL</div><h2>' + esc(perf[0]) + "</h2><p>" + esc(perf[1]) + "</p></div>" +
+      '<div class="resp">' + quem + " <b>" + esc(listaTxt) + "</b>, com <b>" + tempoTxt + "</b>. " + esc(ONDE_TXT[resp.onde] || "") + "</div>" +
+
+      '<div class="conta"><div class="cab">A conta de um ' + esc(p.um) + "</div><table>" +
+        "<tr><td>Material (contas, argola, embalagem)</td><td>" + brl(p.mat) + "</td></tr>" +
+        "<tr><td>Faixa de preço de referência</td><td>" + brl(p.lo) + " a " + brl(p.hi) + "</td></tr>" +
+        "<tr><td>Sobra por peça, no meio da faixa</td><td>" + brl(sobraPeca) + "</td></tr>" +
+        "<tr><td>Peças que cabem no seu tempo</td><td>até " + porSemana + " por semana</td></tr>" +
+        '<tr class="tot"><td>Vendendo ' + exemplo + " peças no mês</td><td>sobram " + brl(sobraPeca * exemplo) + "</td></tr>" +
+      "</table></div>" +
+      '<p class="nota">Valores de referência pra você ter uma base, sem promessa de venda. O preço certo depende da sua região, do seu material e de onde você vende, e é exatamente essa conta que o guia ensina a fazer.</p>' +
+
+      '<div class="oferta"><h2>Seu plano: o <span class="hl">Guia Venda suas Peças</span></h2>' +
+      '<p class="sub" style="margin-bottom:8px">Tudo pra você cobrar certo e vender as peças que monta.</p>' +
+      '<img src="' + IMG_MOCKUP + '" alt="Guia Venda suas Peças" onerror="this.style.display=\'none\'">' +
+      '<ul class="itens">' +
+        "<li><b>Quanto custa cada peça:</b> contas, argola, embalagem e o seu tempo</li>" +
+        "<li><b>Calculadora de preço pronta,</b> com a taxa de cada marketplace já descontada</li>" +
+        "<li><b>As peças que mais saem:</b> chaveiro, ímã, lembrancinha e peça com nome</li>" +
+        "<li><b>Onde vender:</b> conhecidos, Instagram, feira, Shopee, Elo7 e encomendas</li>" +
+        "<li><b>Foto com o celular e embalagem</b> que fazem a peça parecer de loja</li>" +
+        "<li><b>As datas que mais vendem:</b> Natal, Dia das Mães, Dia das Crianças e volta às aulas</li>" +
+      "</ul>" +
+      '<div class="preco"><small>Só nesta página, junto com a sua compra</small><strong>' + PRECO + "</strong><small>pagamento único · liberado no mesmo acesso</small></div>" +
+      '<a class="btn" href="' + LINK_SIM + '">SIM, QUERO O GUIA</a>' +
+      '<div class="selos"><span>🔒 Pagamento seguro</span><span>✅ 7 dias de garantia</span></div>' +
+      '<a class="nao" href="' + LINK_NAO + '">Não, obrigado. Quero só montar pra mim.</a></div>' +
+
+      '<div class="garantia"><b>🛡️</b><div><strong>7 dias de garantia.</strong> Abriu, usou e não era o que esperava? Manda uma mensagem em até 7 dias e o valor volta inteiro.</div></div>' +
+
+      '<div class="faq">' +
+        "<details><summary>Preciso pagar de novo os moldes?</summary><p>Não. Os moldes já são seus. O guia é um material à parte, oferecido só nesta página.</p></details>" +
+        "<details><summary>Como recebo?</summary><p>Na hora, no mesmo acesso dos moldes, com aviso no WhatsApp e no e-mail.</p></details>" +
+        "<details><summary>Preciso ter muitos seguidores?</summary><p>Não. A primeira venda costuma sair pros conhecidos, no WhatsApp. O guia mostra como começar por aí.</p></details>" +
+        "<details><summary>Tenho que vender?</summary><p>Não. Muita gente usa o guia pra saber o custo das peças e presentear melhor. Vender é uma opção.</p></details>" +
+      "</div>" +
+      '<p class="aviso">O guia ensina a calcular custo e preço. Quanto você vende depende do seu tempo, da sua região e do seu esforço; não há promessa de ganho.</p>'
+    );
+    prog(100);
+  }
+
+  intro();
+})();
+</script>
+</body>
+</html>
