@@ -34,7 +34,9 @@
   .chk input{width:18px;height:18px;accent-color:var(--rosa)}
   .pal{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:5px;max-height:190px;overflow:auto;padding:2px}
   .pal label{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;border:1px solid var(--borda);border-radius:5px;padding:4px 5px;cursor:pointer;background:#fff}
-  .pal label.off{opacity:.38}
+  .pal label::after{content:"✓";margin-left:auto;color:var(--verde);font-weight:800}
+  .pal label.off{opacity:.45;text-decoration:line-through;background:#F6F4F7}
+  .pal label.off::after{content:"✕";color:#B23}
   .pal input{display:none}
   .sw{width:14px;height:14px;border-radius:50%;border:1px solid #0002;flex:0 0 14px}
   .mini{font-size:12px;color:var(--cinza)}
@@ -50,11 +52,24 @@
   .leg .t{font-family:Fredoka,Arial;font-weight:700;color:var(--rosa);font-size:13px;letter-spacing:1px;margin-bottom:6px;text-align:center}
   .leg .l{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center;font-size:13px}
   .leg .l span{display:inline-flex;align-items:center;gap:5px}
-  .ferr{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:10px 0}
-  .ferr .cor{width:28px;height:28px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px #0003;cursor:pointer}
+  .ferr{margin:10px 0;border:1px solid var(--borda);border-radius:8px;padding:8px;background:#FFFBF7}
+  .ferr .tools{display:flex;flex-wrap:wrap;gap:5px}
+  .ferr button.t{border:1px solid var(--borda);background:#fff;border-radius:6px;padding:6px 9px;font:700 13px Nunito,Arial;color:var(--roxo);cursor:pointer}
+  .ferr button.t.on{background:var(--roxo);border-color:var(--roxo);color:#fff}
+  .ferr button.t:disabled{opacity:.35;cursor:default}
+  .ferr .atual{display:flex;align-items:center;gap:9px;margin:8px 0 6px;min-height:52px}
+  .ferr .atual > div{flex:1;min-width:0}
+  .ferr .atual .mini{min-height:31px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .ferr .atual b{display:block;font-size:14px}
+  .ferr .atual .mini{display:block;line-height:1.3}
+  .ferr .acoes{margin-left:auto;display:flex;gap:5px}
+  .ferr .acoes .t{font-size:16px;padding:4px 10px}
+  .ferr .pl{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px}
+  .ferr .cor{width:28px;height:28px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px #0003;cursor:pointer;padding:0;flex:0 0 28px}
   .ferr .cor.on{box-shadow:0 0 0 3px var(--rosa)}
-  .ferr button.t{border:1px solid var(--borda);background:#fff;border-radius:6px;padding:6px 10px;font:700 13px Nunito,Arial;cursor:pointer}
-  .ferr button.t.on{background:var(--roxo);color:#fff}
+  .ferr .cor.grande{width:34px;height:34px;flex:0 0 34px;cursor:default}
+  .ferr details{margin-top:6px}
+  .ferr summary{cursor:pointer;font-weight:800;font-size:13px;color:var(--rosa-esc)}
   .dicas{font-size:13px;color:var(--roxo-2)}
   .dicas li{margin:0 0 5px 18px}
   #printArea{display:none}
@@ -93,7 +108,7 @@
         <label class="lab">Tipo de imagem</label>
         <div class="seg" id="modo"><button data-v="auto" class="on">Automático</button><button data-v="foto">Foto</button><button data-v="pixel">Pixel art ou molde</button></div>
         <p class="mini" style="margin-top:4px">"Pixel art ou molde" lê a grade da imagem quadradinho por quadradinho.</p>
-        <label class="lab">Largura em contas</label>
+        <label class="lab">Tamanho em contas <span class="mini">(lado maior)</span></label>
         <div class="seg" id="larg">
           <button data-v="15">15 · chaveiro</button><button data-v="22">22</button><button data-v="29" class="on">29 · 1 placa</button><button data-v="40">40</button><button data-v="58">58 · 4 placas</button>
         </div>
@@ -113,7 +128,8 @@
         <div class="row"><span class="mini">Menos</span><input type="range" id="det" min="0" max="3" step="0.5" value="1"><span class="mini">Mais</span></div>
         <label class="lab">Máximo de cores: <span id="maxCv">8</span> <span class="mini">(nas fotos)</span></label>
         <input type="range" id="maxC" min="2" max="16" value="8" style="width:100%">
-        <label class="lab">Cores que você tem <span class="mini">(toque pra tirar)</span></label>
+        <label class="lab">Cores que você tem <span class="mini">(✓ entra no molde · toque pra tirar)</span></label>
+        <div class="row" style="gap:10px;margin-bottom:5px"><a href="#" id="palTodas" class="mini" style="color:var(--rosa-esc);font-weight:800">Marcar todas</a><a href="#" id="palNenhuma" class="mini" style="color:var(--rosa-esc);font-weight:800">Desmarcar todas</a></div>
         <div class="pal" id="pal"></div>
       </div>
     </div>
@@ -127,7 +143,7 @@
           <label class="chk" style="margin-top:0"><input type="checkbox" id="verContas">Ver como peça pronta</label>
           <div class="ferr" id="ferr"></div>
           <div id="stage"><canvas id="grade"></canvas></div>
-          <p class="mini" style="margin-top:6px">Toque numa cor e depois nos quadradinhos pra corrigir. <b>Apagar área</b> tira de uma vez um pedaço do fundo que sobrou.</p>
+          <p class="mini" style="margin-top:6px">Escolha a ferramenta e a cor, depois toque nos quadradinhos. Errou? <b>↶</b> desfaz e <b>↷</b> refaz.</p>
           <div class="leg" style="margin-top:10px"><div class="t">CORES QUE VOCÊ VAI USAR</div><div class="l" id="leg"></div></div>
           <button class="btn" id="imp">🖨️ Imprimir no tamanho real</button>
           <button class="btn sec" id="png">⬇️ Baixar imagem do molde</button>
@@ -187,7 +203,7 @@
   /* ---------- estado ---------- */
   var img = null, ativas = PALETA.map(function () { return true; });
   var largura = 29, mmConta = 5, modo = "auto", verContas = false;
-  var grade = null, W = 0, H = 0, pincel = 0, borracha = false, magica = false, historico = [];
+  var grade = null, W = 0, H = 0, pincel = -1, historico = [];
 
   var palEl = $("pal");
   PALETA.forEach(function (p, i) {
@@ -196,6 +212,12 @@
     l.querySelector("input").addEventListener("change", function () { ativas[i] = this.checked; l.classList.toggle("off", !this.checked); gerar(); });
     palEl.appendChild(l);
   });
+  function palTodas(v) {
+    palEl.querySelectorAll("label").forEach(function (l, i) { l.querySelector("input").checked = v; ativas[i] = v; l.classList.toggle("off", !v); });
+    if (v) gerar(); else aviso("Agora toque nas cores que você tem pra marcar.");
+  }
+  $("palTodas").addEventListener("click", function (e) { e.preventDefault(); palTodas(true); });
+  $("palNenhuma").addEventListener("click", function (e) { e.preventDefault(); palTodas(false); });
   function seg(id, cb) {
     var el = $(id);
     el.addEventListener("click", function (e) {
@@ -357,7 +379,8 @@
     return { W: Wc, H: Hc, ns: ns, s: s, vazio: vaz };
   }
   function amostrasFoto(area, Wc, Hc) {
-    var S = Wc * Hc > 2500 ? 4 : 5, w = Wc * S, h = Hc * S, d = reduzir(w, h, area, true);
+    /* peça pequena: mais amostras por conta (até 10x10), pra decidir melhor cada uma */
+    var S = Math.max(Wc * Hc > 2500 ? 4 : 5, Math.min(10, Math.floor(Math.sqrt(30000 / (Wc * Hc))))), w = Wc * S, h = Hc * S, d = reduzir(w, h, area, true);
     var ns = S * S, s = new Float32Array(Wc*Hc*ns*3), vaz = new Uint8Array(Wc*Hc);
     for (var cy = 0; cy < Hc; cy++) for (var cx = 0; cx < Wc; cx++) {
       var i = cy*Wc + cx, n = 0, A = 0;
@@ -672,7 +695,10 @@
           area = [area[0] + Math.max(0, sg.bx[0] - 1) * fx, area[1] + Math.max(0, sg.bx[1] - 1) * fy, Math.min(sg.w, sg.bx[2] + 2) * fx, Math.min(sg.h, sg.bx[3] + 2) * fy];
         }
       }
-      var Wc = Math.max(4, largura - (usarC ? 2 : 0)), Hc = Math.min(120, Math.max(4, Math.round(Wc * area[3] / area[2])));
+      /* o tamanho escolhido vale pro lado maior: "29 · 1 placa" cabe mesmo em 1 placa */
+      var lado = Math.max(4, largura - (usarC ? 2 : 0)), Wc, Hc;
+      if (area[2] >= area[3]) { Wc = lado; Hc = Math.max(4, Math.round(lado * area[3] / area[2])); }
+      else { Hc = lado; Wc = Math.max(4, Math.round(lado * area[2] / area[3])); }
       am = amostrasFoto(area, Wc, Hc);
       if (sg) {
         /* conta fica vazia se a maior parte dela é fundo no recorte */
@@ -684,7 +710,7 @@
             var mx = Math.floor((X - sg.area[0]) / ex), my = Math.floor((Y - sg.area[1]) / ey);
             tot++; if (mx >= 0 && my >= 0 && mx < sg.w && my < sg.h && sg.mask[my * sg.w + mx]) dentro++;
           }
-          if (dentro / tot < 0.5) am.vazio[cy * Wc + cx] = 1;
+          if (dentro / tot < 0.4) am.vazio[cy * Wc + cx] = 1;
         }
         segOk = true;
       }
@@ -708,7 +734,7 @@
     if (usado !== "pixel" && $("vivas").checked) {
       var sL = 0, nL = 0, vi;
       for (i = 0; i < n; i++) if (!vazio[i]) for (j = 0; j < ns; j++) { var Lx = am.s[(i*ns + j) * 3]; if (Lx > 35) { sL += Lx; nL++; } }
-      var mL = nL ? sL / nL : 60, Ls = [], sC = 0, nC = 0;
+      var mL = nL ? sL / nL : 60, Ls = [], sC = 0, nC = 0, fLuz = Math.max(0.5, Math.min(0.75, 0.5 + (Math.max(Wt, Ht) - 15) * 0.008));
       for (i = 0; i < n; i++) if (!vazio[i]) for (j = 0; j < ns; j++) { vi = (i*ns + j) * 3; Ls.push(am.s[vi]); sC += Math.sqrt(am.s[vi+1]*am.s[vi+1] + am.s[vi+2]*am.s[vi+2]); nC++; }
       if (nC && sC / nC < 10) {
         /* foto preto e branco: estica do mais escuro ao mais claro, pra usar preto, os 3 cinzas e o branco */
@@ -723,7 +749,7 @@
         }
       } else for (i = 0; i < n; i++) if (!vazio[i]) for (j = 0; j < ns; j++) {
         vi = (i*ns + j) * 3;
-        if (am.s[vi] > 35) am.s[vi] = Math.max(35, mL + (am.s[vi] - mL) * 0.7);
+        if (am.s[vi] > 35) am.s[vi] = Math.max(35, mL + (am.s[vi] - mL) * fLuz);
         am.s[vi+1] *= 1.15; am.s[vi+2] *= 1.15;
       }
     }
@@ -757,6 +783,25 @@
         for (k = 0; k < nG; k++) if (sm[k][3]) cent[k] = [sm[k][0]/sm[k][3], sm[k][1]/sm[k][3], sm[k][2]/sm[k][3]];
       }
       idx.forEach(function (e) { grupo[e] = maisPertoG(e); });
+      /* peça pequena: mesma cor em luz e sombra (mesmo tom, só mais escuro) vira uma cor só */
+      var ladoM = Math.max(Wt, Ht);
+      if (ladoM <= 40) {
+        var limL = 24 - (ladoM - 15) * 0.4, tamG = new Float64Array(nG), dono = [];
+        idx.forEach(function (e) { tamG[grupo[e]]++; });
+        for (k = 0; k < nG; k++) dono.push(k);
+        var ordem = []; for (k = 0; k < nG; k++) ordem.push(k); ordem.sort(function (a, b) { return tamG[b] - tamG[a]; });
+        ordem.forEach(function (a, ia) {
+          if (dono[a] !== a) return;
+          var ca = cent[a], Ca = Math.sqrt(ca[1]*ca[1] + ca[2]*ca[2]); if (Ca < 12) return;
+          for (var ib = ia + 1; ib < ordem.length; ib++) {
+            var bq = ordem[ib]; if (dono[bq] !== bq) continue;
+            var cb2 = cent[bq], Cb = Math.sqrt(cb2[1]*cb2[1] + cb2[2]*cb2[2]); if (Cb < 12) continue;
+            var dh = Math.abs(Math.atan2(ca[2], ca[1]) - Math.atan2(cb2[2], cb2[1])); if (dh > Math.PI) dh = 2 * Math.PI - dh;
+            if (dh < 0.21 && Math.abs(ca[0] - cb2[0]) < limL && cb2[0] > 42 && ca[0] > 42) dono[bq] = a;
+          }
+        });
+        idx.forEach(function (e) { grupo[e] = dono[grupo[e]]; });
+      }
     } else {
       D = new Float32Array(n * NP);
       for (i = 0; i < n; i++) { if (vazio[i]) continue; o = i * 3; for (c = 0; c < NP; c++) D[i*NP + c] = dist(am.s[o], am.s[o+1], am.s[o+2], PLAB[c][0], PLAB[c][1], PLAB[c][2]); }
@@ -784,12 +829,26 @@
         }
         var best = conj[0], bv = -1;
         for (var t2 = 0; t2 < conj.length; t2++) if (votos[conj[t2]] > bv) { bv = votos[conj[t2]]; best = conj[t2]; }
+        /* olho, nariz, boca: cor bem mais escura que ocupa um bom pedaço da conta ganha, mesmo sem maioria */
+        if (ns > 1) {
+          var tv = 0; for (t2 = 0; t2 < conj.length; t2++) tv += votos[conj[t2]];
+          var esc = -1, ev = 0, limF = Math.max(0.12, 0.3 - det * 0.06);
+          for (t2 = 0; t2 < conj.length; t2++) { var cc2 = conj[t2]; if (PLAB[cc2][0] < PLAB[best][0] - 30 && votos[cc2] / tv >= limF && votos[cc2] > ev) { ev = votos[cc2]; esc = cc2; } }
+          /* pintinha colorida (semente, bochecha): cor muito diferente, num pedaço grande da conta */
+          var xi = i % Wt, yi = (i / Wt) | 0;
+          var dentroT = xi > 0 && yi > 0 && xi < Wt - 1 && yi < Ht - 1 && !vazio[i-1] && !vazio[i+1] && !vazio[i-Wt] && !vazio[i+Wt];
+          if (esc < 0 && det > 0 && dentroT) {
+            var limC = Math.max(0.14, 0.3 - det * 0.08);
+            for (t2 = 0; t2 < conj.length; t2++) { var cc3 = conj[t2]; if (cc3 !== best && Math.sqrt(PLAB[cc3][1]*PLAB[cc3][1] + PLAB[cc3][2]*PLAB[cc3][2]) >= 20 && votos[cc3] / tv >= limC && votos[cc3] > ev && Math.sqrt(dist(PLAB[cc3][0], PLAB[cc3][1], PLAB[cc3][2], PLAB[best][0], PLAB[best][1], PLAB[best][2])) > 45) { ev = votos[cc3]; esc = cc3; } }
+          }
+          if (esc > -1) best = esc;
+        }
         g2[i] = best;
       }
     }
     var conj = permitidas.slice();
     escolher(conj);
-    var maxC = usado === "pixel" ? NP : Math.max(1, +$("maxC").value - (usarC && permitidas.indexOf(0) > -1 ? 1 : 0));
+    var maxC = usado === "pixel" ? NP : Math.max(1, +$("maxC").value - (usarC ? 1 : 0));
     while (true) {
       var cont = {}; for (var q = 0; q < n; q++) if (g2[q] > -1) cont[g2[q]] = (cont[g2[q]] || 0) + 1;
       conj = conj.filter(function (c) { return cont[c] > 0; });
@@ -811,6 +870,17 @@
             var v = copia[ay*Wt + ax]; tot++; if (v === c0) iguais++; viz[v] = (viz[v] || 0) + 1;
             Lv += v < 0 ? 100 : PLAB[v][0];
           });
+          var vazios = viz[-1] || 0;
+          /* borda clara que sobrou do fundo (halo branco/cinza na beirada): vira a cor do vizinho ou some */
+          if (vazios > 0 && iguais <= 1 && usado !== "pixel") {
+            var cheio = null, mc = 0; Object.keys(viz).forEach(function (v) { if (+v > -1 && +v !== c0 && viz[v] > mc) { mc = viz[v]; cheio = +v; } });
+            var cr0 = Math.sqrt(PLAB[c0][1]*PLAB[c0][1] + PLAB[c0][2]*PLAB[c0][2]);
+            if (cheio !== null && cr0 < 12) {
+              var crV = Math.sqrt(PLAB[cheio][1]*PLAB[cheio][1] + PLAB[cheio][2]*PLAB[cheio][2]);
+              /* cinza/branco na beirada de um objeto colorido = resto do fundo (contorno escuro fica) */
+              if ((iguais === 0 && PLAB[c0][0] > PLAB[cheio][0] + 12) || (crV >= 15 && PLAB[c0][0] > PLAB[cheio][0] - 20)) { g2[k2] = vazios >= 2 ? -1 : cheio; continue; }
+            }
+          }
           if (iguais === 0 && tot >= 3) {
             if (tot && PLAB[c0][0] < Lv / tot - 25) continue;
             if (det > 0) {
@@ -841,13 +911,15 @@
     }
 
     if (usarC) {
+      /* contorno: preto, ou a cor mais escura que a pessoa tem */
+      var corContorno = permitidas.indexOf(0) > -1 ? 0 : permitidas.slice().sort(function (a, b) { return PLAB[a][0] - PLAB[b][0]; })[0];
       var Wn = Wt + 2, Hn = Ht + 2, ng = new Int16Array(Wn * Hn).fill(-1);
       for (var y4 = 0; y4 < Ht; y4++) for (var x4 = 0; x4 < Wt; x4++) ng[(y4+1)*Wn + x4 + 1] = g2[y4*Wt + x4];
       var out = ng.slice();
       for (var y5 = 0; y5 < Hn; y5++) for (var x5 = 0; x5 < Wn; x5++) {
         if (ng[y5*Wn + x5] > -1) continue;
         var toca = [[1,0],[-1,0],[0,1],[0,-1]].some(function (d) { var ax = x5 + d[0], ay = y5 + d[1]; return ax >= 0 && ay >= 0 && ax < Wn && ay < Hn && ng[ay*Wn + ax] > -1; });
-        if (toca) out[y5*Wn + x5] = 0;
+        if (toca) out[y5*Wn + x5] = corContorno;
       }
       g2 = out; Wt = Wn; Ht = Hn;
     }
@@ -856,7 +928,7 @@
     if (maxX < 0) { grade = []; W = 0; H = 0; mostrar(); return; }
     var rec = [];
     for (var y7 = minY; y7 <= maxY; y7++) { var linha = []; for (var x7 = minX; x7 <= maxX; x7++) linha.push(g2[y7*Wt + x7]); rec.push(linha); }
-    grade = rec; W = maxX - minX + 1; H = maxY - minY + 1; historico = [];
+    grade = rec; W = maxX - minX + 1; H = maxY - minY + 1; historico = []; refazer = [];
     aviso(usado === "pixel" ? "✨ Encontrei a grade da imagem: cada quadradinho virou uma conta, no tamanho original. Pra mudar o tamanho, escolha \"Foto\"." : msgFim);
     mostrar();
   }
@@ -933,54 +1005,78 @@
       return '<span><span class="sw" style="background:' + PALETA[k][1] + '"></span><b>×' + c[k] + "</b> " + PALETA[k][0] + "</span>";
     }).join("");
   }
+  /* ---------- edição: uma ferramenta ativa por vez + paleta completa ---------- */
+  var FERR = [
+    ["pintar", "✏️ Pintar", "Toque ou arraste nos quadradinhos pra pintar com a cor escolhida."],
+    ["balde", "🪣 Balde", "Toque numa área: ela inteira (mesma cor encostada) vira a cor escolhida."],
+    ["trocar", "🔁 Trocar cor", "Toque num quadradinho: todas as contas dessa cor no molde viram a cor escolhida."],
+    ["gotas", "💧 Pegar cor", "Toque num quadradinho pra usar a cor dele."],
+    ["borracha", "🧽 Borracha", "Toque ou arraste pra tirar contas."],
+    ["area", "✂️ Apagar área", "Toque num pedaço: some ele inteiro (mesma cor encostada)."]
+  ];
+  var ferr = "pintar", refazer = [];
   function ferramentas() {
-    var c = contagem(), usadas = Object.keys(c).map(Number), outras = [];
-    PALETA.forEach(function (p, i) { if (usadas.indexOf(i) < 0) outras.push(i); });
-    if (usadas.indexOf(pincel) < 0 && !borracha && !magica) pincel = usadas[0] || 0;
-    var h = usadas.concat(outras.slice(0, 0)).map(function (i) {
-      return '<span class="cor' + (!borracha && !magica && i === pincel ? " on" : "") + '" data-c="' + i + '" title="' + PALETA[i][0] + '" style="background:' + PALETA[i][1] + '"></span>';
-    }).join("");
-    h += '<select id="maisCor" style="padding:5px;border:1px solid #EADFE8;border-radius:6px;font:700 12px Nunito,Arial"><option value="">+ outra cor</option>' +
-      outras.map(function (i) { return '<option value="' + i + '">' + PALETA[i][0] + "</option>"; }).join("") + "</select>";
-    h += '<button class="t' + (borracha ? " on" : "") + '" id="borr">Borracha</button><button class="t' + (magica ? " on" : "") + '" id="mag">Apagar área</button><button class="t" id="desf">↶ Desfazer</button>';
+    var c = contagem(), usadas = Object.keys(c).map(Number).sort(function (a, b) { return c[b] - c[a]; });
+    if (pincel < 0 || pincel >= NP) pincel = usadas[0] || 0;
+    var usaCor = ferr === "pintar" || ferr === "balde" || ferr === "trocar";
+    var h = '<div class="tools">' + FERR.map(function (f) { return '<button class="t' + (ferr === f[0] ? " on" : "") + '" data-f="' + f[0] + '">' + f[1] + "</button>"; }).join("") + "</div>";
+    h += '<div class="atual"><span class="cor grande" style="background:' + PALETA[pincel][1] + (usaCor ? "" : ";opacity:.35") + '"></span><div><b>' + PALETA[pincel][0] + '</b><span class="mini" id="dicaF">' + FERR.filter(function (f) { return f[0] === ferr; })[0][2] + "</span></div>" +
+      '<span class="acoes"><button class="t" id="desf" title="Desfazer"' + (historico.length ? "" : " disabled") + '>↶</button><button class="t" id="refz" title="Refazer"' + (refazer.length ? "" : " disabled") + ">↷</button></span></div>";
+    h += '<div class="pl"><span class="mini">No molde:</span>' + usadas.map(function (i) { return corBtn(i, c[i]); }).join("") + "</div>";
+    h += '<details class="todas"' + (todasAberta ? " open" : "") + '><summary>🎨 Todas as cores</summary><div class="pl">' + PALETA.map(function (q, i) { return corBtn(i); }).join("") + "</div></details>";
     $("ferr").innerHTML = h;
-    $("ferr").querySelectorAll(".cor").forEach(function (el) {
-      el.onclick = function () { pincel = +el.getAttribute("data-c"); borracha = false; magica = false; ferramentas(); };
+    $("ferr").querySelectorAll("[data-f]").forEach(function (b) { b.onclick = function () { ferr = b.getAttribute("data-f"); ferramentas(); }; });
+    $("ferr").querySelectorAll("[data-c]").forEach(function (b) {
+      b.onclick = function () { pincel = +b.getAttribute("data-c"); if (ferr !== "balde" && ferr !== "trocar") ferr = "pintar"; ferramentas(); };
     });
-    $("maisCor").onchange = function () { if (this.value !== "") { pincel = +this.value; borracha = false; magica = false; ferramentas(); } };
-    $("borr").onclick = function () { borracha = !borracha; magica = false; ferramentas(); };
-    $("mag").onclick = function () { magica = !magica; borracha = false; ferramentas(); };
-    $("desf").onclick = function () { var u = historico.pop(); if (u) { grade = u; atualizarInfo(); ferramentas(); desenhar(); } };
+    $("ferr").querySelector("details").ontoggle = function () { todasAberta = this.open; };
+    $("desf").onclick = function () { var u = historico.pop(); if (u) { refazer.push(copiaGrade()); grade = u; atualizarInfo(); ferramentas(); desenhar(); } };
+    $("refz").onclick = function () { var u = refazer.pop(); if (u) { historico.push(copiaGrade()); grade = u; atualizarInfo(); ferramentas(); desenhar(); } };
   }
+  var todasAberta = false;
+  function corBtn(i, n) {
+    return '<button class="cor' + (i === pincel ? " on" : "") + '" data-c="' + i + '" title="' + PALETA[i][0] + (n ? " · " + n + " contas" : "") + '" style="background:' + PALETA[i][1] + '"></button>';
+  }
+  function copiaGrade() { return grade.map(function (r) { return r.slice(); }); }
 
-  /* pintar */
-  var pintando = false;
+  var pintando = false, antes = null, mexeu = false;
   function celula(e) {
     var r = cv.getBoundingClientRect(), x = Math.floor((e.clientX - r.left - mg) / cel), y = Math.floor((e.clientY - r.top - mg) / cel);
     return (x >= 0 && y >= 0 && x < W && y < H) ? [x, y] : null;
   }
-  function apagarArea(x0, y0) {
-    var alvo = grade[y0][x0]; if (alvo < 0) return;
+  function inundar(x0, y0, nova) {
+    var alvo = grade[y0][x0]; if (alvo === nova) return false;
     var pilha = [[x0, y0]];
     while (pilha.length) {
       var p = pilha.pop(), x = p[0], y = p[1];
       if (x < 0 || y < 0 || x >= W || y >= H || grade[y][x] !== alvo) continue;
-      grade[y][x] = -1; pilha.push([x+1, y], [x-1, y], [x, y+1], [x, y-1]);
+      grade[y][x] = nova; pilha.push([x+1, y], [x-1, y], [x, y+1], [x, y-1]);
     }
+    return true;
   }
-  function pintar(e) {
+  function registrar() { if (!mexeu) { historico.push(antes); if (historico.length > 60) historico.shift(); refazer = []; mexeu = true; } }
+  function aplicar(e, inicio) {
     var c = celula(e); if (!c) return;
-    if (magica) { if (e.type === "pointerdown") { apagarArea(c[0], c[1]); desenhar(); } return; }
-    var v = borracha ? -1 : pincel;
-    if (grade[c[1]][c[0]] === v) return;
-    grade[c[1]][c[0]] = v; desenhar();
+    var x = c[0], y = c[1], atual = grade[y][x];
+    if (ferr === "gotas") { if (inicio && atual > -1) { pincel = atual; ferr = "pintar"; ferramentas(); } return; }
+    if (ferr === "area") { if (inicio && atual > -1) { registrar(); inundar(x, y, -1); desenhar(); } return; }
+    if (ferr === "balde") { if (inicio) { var antesB = copiaGrade(); if (inundar(x, y, pincel)) { antes = antesB; registrar(); desenhar(); } } return; }
+    if (ferr === "trocar") {
+      if (inicio && atual > -1 && atual !== pincel) { registrar(); grade.forEach(function (r) { for (var k = 0; k < r.length; k++) if (r[k] === atual) r[k] = pincel; }); desenhar(); }
+      return;
+    }
+    var v = ferr === "borracha" ? -1 : pincel;
+    if (atual === v) return;
+    registrar(); grade[y][x] = v; desenhar();
   }
   cv.addEventListener("pointerdown", function (e) {
-    if (!grade) return; pintando = true; historico.push(grade.map(function (r) { return r.slice(); })); if (historico.length > 40) historico.shift();
-    cv.setPointerCapture(e.pointerId); pintar(e);
+    if (!grade || !W) return; e.preventDefault();
+    pintando = true; antes = copiaGrade(); mexeu = false;
+    try { cv.setPointerCapture(e.pointerId); } catch (er) {}
+    aplicar(e, true);
   });
-  cv.addEventListener("pointermove", function (e) { if (pintando) pintar(e); });
-  ["pointerup", "pointercancel"].forEach(function (ev) { cv.addEventListener(ev, function () { if (pintando) { pintando = false; atualizarInfo(); ferramentas(); } }); });
+  cv.addEventListener("pointermove", function (e) { if (pintando && (ferr === "pintar" || ferr === "borracha")) aplicar(e, false); });
+  ["pointerup", "pointercancel"].forEach(function (ev) { cv.addEventListener(ev, function () { if (pintando) { pintando = false; if (mexeu) atualizarInfo(); ferramentas(); } }); });
   window.addEventListener("resize", function () { if (grade && W) desenhar(); });
 
   /* ---------- imprimir no tamanho real ---------- */
