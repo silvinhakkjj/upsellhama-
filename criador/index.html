@@ -106,6 +106,7 @@
         <h2><b>3</b>Ajustes</h2>
         <label class="chk"><input type="checkbox" id="fundo" checked>Remover o fundo</label>
         <div class="row"><span class="mini">Força</span><input type="range" id="fundoT" min="3" max="40" value="13"></div>
+        <label class="chk"><input type="checkbox" id="vivas" checked>Cores mais vivas</label>
         <label class="chk"><input type="checkbox" id="contorno">Contorno preto em volta</label>
         <label class="chk"><input type="checkbox" id="limpar" checked>Limpar pontinhos soltos</label>
         <label class="lab">Realçar detalhes (olhos, bochechas, pintinhas)</label>
@@ -213,7 +214,7 @@
     if (modo === "pixel") { modo = "foto"; marcarModo(); }
     gerar();
   });
-  ["quad", "fundo", "contorno", "limpar"].forEach(function (id) { $(id).addEventListener("change", gerar); });
+  ["quad", "fundo", "contorno", "limpar", "vivas"].forEach(function (id) { $(id).addEventListener("change", gerar); });
   $("fundoT").addEventListener("change", gerar);
   $("det").addEventListener("change", gerar);
   $("maxC").addEventListener("input", function () { $("maxCv").textContent = this.value; });
@@ -331,6 +332,9 @@
     for (var i = 0; i < gx.n; i++) cols.push(gx.o + i * gx.p);
     for (var j = 0; j < gy.n; j++) rows.push(gy.o + j * gy.p);
     if (cols.length < 5 || rows.length < 5 || cols.length > 160 || rows.length > 160) return null;
+    /* grade de verdade: quadradinho de pelo menos 4px e ocupando boa parte da imagem (senão é ruído do JPG) */
+    if (gx.p < 4 || gy.p < 4) return null;
+    if ((cols.length * gx.p) / src.w < 0.25 || (rows.length * gy.p) / src.h < 0.25) return null;
     return { px: gx.p, py: gy.p, cols: cols, rows: rows, conf: Math.min(gx.conf, gy.conf) };
   }
 
@@ -465,6 +469,178 @@
     return [base[0] + minX * fx, base[1] + minY * fy, (maxX - minX + 1) * fx, (maxY - minY + 1) * fy];
   }
 
+  /* ---------- recorte do objeto: GrabCut em superpixels ---------- */
+  /* divide a foto em ~700 pedacinhos de cor parecida, aprende as cores do objeto e do fundo
+     e escolhe o corte que separa os dois passando pelas bordas mais fortes */
+  function maxflow(N) {
+    var head = new Int32Array(N).fill(-1), to = [], cap = [], nxt = [];
+    return {
+      add: function (u, v, c, rc) {
+        to.push(v); cap.push(c); nxt.push(head[u]); head[u] = to.length - 1;
+        to.push(u); cap.push(rc); nxt.push(head[v]); head[v] = to.length - 1;
+      },
+      run: function (s, t) {
+        var C = Float64Array.from(cap), T = Int32Array.from(to), X = Int32Array.from(nxt), lvl = new Int32Array(N), it = new Int32Array(N);
+        function bfs() {
+          lvl.fill(-1); lvl[s] = 0; var q = [s], qi = 0;
+          while (qi < q.length) { var u = q[qi++]; for (var e = head[u]; e !== -1; e = X[e]) if (C[e] > 1e-9 && lvl[T[e]] < 0) { lvl[T[e]] = lvl[u] + 1; q.push(T[e]); } }
+          return lvl[t] >= 0;
+        }
+        function dfs(u, f) {
+          if (u === t) return f;
+          for (; it[u] !== -1; it[u] = X[it[u]]) {
+            var e = it[u], v = T[e];
+            if (C[e] > 1e-9 && lvl[v] === lvl[u] + 1) { var d = dfs(v, Math.min(f, C[e])); if (d > 0) { C[e] -= d; C[e ^ 1] += d; return d; } }
+          }
+          return 0;
+        }
+        var guard = 0;
+        while (bfs() && guard++ < 400) { for (var i = 0; i < N; i++) it[i] = head[i]; var f; while ((f = dfs(s, 1e18)) > 0) {} }
+        var lado = new Uint8Array(N), q2 = [s]; lado[s] = 1;
+        while (q2.length) { var u = q2.pop(); for (var e = head[u]; e !== -1; e = X[e]) if (C[e] > 1e-9 && !lado[T[e]]) { lado[T[e]] = 1; q2.push(T[e]); } }
+        return lado;
+      }
+    };
+  }
+  function gmm(cores, pesos, K) {
+    var n = cores.length; if (!n) return null;
+    K = Math.min(K, n);
+    var cent = [];
+    for (var k = 0; k < K; k++) cent.push(cores[Math.floor((k + 0.5) * n / K)].slice());
+    var g = new Int32Array(n);
+    for (var it = 0; it < 8; it++) {
+      for (var i = 0; i < n; i++) { var m = 1e18, mi = 0; for (k = 0; k < K; k++) { var c = cent[k], d = (cores[i][0]-c[0])*(cores[i][0]-c[0]) + (cores[i][1]-c[1])*(cores[i][1]-c[1]) + (cores[i][2]-c[2])*(cores[i][2]-c[2]); if (d < m) { m = d; mi = k; } } g[i] = mi; }
+      var s = []; for (k = 0; k < K; k++) s.push([0, 0, 0, 0]);
+      for (i = 0; i < n; i++) { var w = pesos[i]; s[g[i]][0] += cores[i][0]*w; s[g[i]][1] += cores[i][1]*w; s[g[i]][2] += cores[i][2]*w; s[g[i]][3] += w; }
+      for (k = 0; k < K; k++) if (s[k][3] > 0) cent[k] = [s[k][0]/s[k][3], s[k][1]/s[k][3], s[k][2]/s[k][3]];
+    }
+    var comp = [], tot = 0; for (i = 0; i < n; i++) tot += pesos[i];
+    for (k = 0; k < K; k++) {
+      var sw = 0, v = [0, 0, 0];
+      for (i = 0; i < n; i++) if (g[i] === k) { var ww = pesos[i]; sw += ww; for (var c2 = 0; c2 < 3; c2++) v[c2] += ww * (cores[i][c2] - cent[k][c2]) * (cores[i][c2] - cent[k][c2]); }
+      if (sw <= 0) continue;
+      comp.push({ pi: sw / tot, mu: cent[k], v: v.map(function (x) { return Math.max(9, x / sw); }) });
+    }
+    return comp;
+  }
+  function logp(model, c) {
+    var s = 0;
+    for (var k = 0; k < model.length; k++) {
+      var m = model[k], e = 0, det = 1;
+      for (var j = 0; j < 3; j++) { var d = c[j] - m.mu[j]; e += d * d / m.v[j]; det *= m.v[j]; }
+      s += m.pi * Math.exp(-0.5 * e) / Math.sqrt(det * 248.05);
+    }
+    return Math.log(s + 1e-30);
+  }
+  function segmentar(area) {
+    var esc = Math.min(1, 240 / Math.max(area[2], area[3]));
+    var w = Math.max(24, Math.round(area[2] * esc)), h = Math.max(24, Math.round(area[3] * esc)), n = w * h;
+    var d = reduzir(w, h, area, true), Lc = new Float32Array(n * 3), transp = new Uint8Array(n);
+    for (var i = 0; i < n; i++) { var lb = lab(d[i*4], d[i*4+1], d[i*4+2]); Lc[i*3] = lb[0]; Lc[i*3+1] = lb[1]; Lc[i*3+2] = lb[2]; if (d[i*4+3] < 128) transp[i] = 1; }
+    /* SLIC */
+    var S = Math.max(4, Math.round(Math.sqrt(n / 700))), cen = [];
+    for (var y = S / 2; y < h; y += S) for (var x = S / 2; x < w; x += S) { var k0 = (Math.floor(y) * w + Math.floor(x)) * 3; cen.push([Lc[k0], Lc[k0+1], Lc[k0+2], x, y]); }
+    var nc = cen.length, rot = new Int32Array(n), dmin = new Float32Array(n), fat = (10 / S) * (10 / S);
+    for (var itr = 0; itr < 5; itr++) {
+      dmin.fill(1e30);
+      for (var c = 0; c < nc; c++) {
+        var C0 = cen[c], x0 = Math.max(0, Math.floor(C0[3] - 2*S)), x1 = Math.min(w, Math.ceil(C0[3] + 2*S)), y0 = Math.max(0, Math.floor(C0[4] - 2*S)), y1 = Math.min(h, Math.ceil(C0[4] + 2*S));
+        for (var yy = y0; yy < y1; yy++) for (var xx = x0; xx < x1; xx++) {
+          var p = yy*w + xx, dl = Lc[p*3] - C0[0], da = Lc[p*3+1] - C0[1], db = Lc[p*3+2] - C0[2], dx = xx - C0[3], dy = yy - C0[4];
+          var D = dl*dl + da*da + db*db + (dx*dx + dy*dy) * fat;
+          if (D < dmin[p]) { dmin[p] = D; rot[p] = c; }
+        }
+      }
+      var acc = new Float64Array(nc * 6);
+      for (var q = 0; q < n; q++) { var r = rot[q] * 6; acc[r] += Lc[q*3]; acc[r+1] += Lc[q*3+1]; acc[r+2] += Lc[q*3+2]; acc[r+3] += q % w; acc[r+4] += (q / w) | 0; acc[r+5]++; }
+      for (c = 0; c < nc; c++) { var a6 = c * 6; if (acc[a6+5] > 0) cen[c] = [acc[a6]/acc[a6+5], acc[a6+1]/acc[a6+5], acc[a6+2]/acc[a6+5], acc[a6+3]/acc[a6+5], acc[a6+4]/acc[a6+5]]; }
+    }
+    var cnt = new Float64Array(nc), borda = new Uint8Array(nc), cor = [];
+    var soma = new Float64Array(nc * 3), tr = new Float64Array(nc);
+    for (q = 0; q < n; q++) {
+      var rr = rot[q]; cnt[rr]++; soma[rr*3] += Lc[q*3]; soma[rr*3+1] += Lc[q*3+1]; soma[rr*3+2] += Lc[q*3+2]; if (transp[q]) tr[rr]++;
+      var qx = q % w, qy = (q / w) | 0; if (qx === 0 || qy === 0 || qx === w - 1 || qy === h - 1) borda[rr] = 1;
+    }
+    for (c = 0; c < nc; c++) cor.push(cnt[c] ? [soma[c*3]/cnt[c], soma[c*3+1]/cnt[c], soma[c*3+2]/cnt[c]] : [0, 0, 0]);
+    /* vizinhança entre pedacinhos, com o tamanho da fronteira */
+    var viz = {};
+    for (q = 0; q < n; q++) {
+      var qx2 = q % w, a = rot[q];
+      if (qx2 < w - 1 && rot[q+1] !== a) { var b1 = rot[q+1], k1 = a < b1 ? a * nc + b1 : b1 * nc + a; viz[k1] = (viz[k1] || 0) + 1; }
+      if (q + w < n && rot[q+w] !== a) { var b2 = rot[q+w], k2 = a < b2 ? a * nc + b2 : b2 * nc + a; viz[k2] = (viz[k2] || 0) + 1; }
+    }
+    var arestas = Object.keys(viz).map(function (k) { k = +k; return [Math.floor(k / nc), k % nc, viz[k]]; });
+    var md = 0; arestas.forEach(function (e) { var u = cor[e[0]], v = cor[e[1]]; md += (u[0]-v[0])*(u[0]-v[0]) + (u[1]-v[1])*(u[1]-v[1]) + (u[2]-v[2])*(u[2]-v[2]); });
+    var beta = arestas.length ? 1 / (2 * md / arestas.length + 1e-6) : 0;
+    /* fundo certo: o que encosta na borda do quadro ou é transparente */
+    var fixoFundo = new Uint8Array(nc), frente = new Uint8Array(nc), algum = false;
+    for (c = 0; c < nc; c++) { if (!cnt[c]) { fixoFundo[c] = 1; continue; } if (borda[c] || tr[c] / cnt[c] > 0.5) fixoFundo[c] = 1; else { frente[c] = 1; algum = true; } }
+    if (!algum) return null;
+    /* começo: só conta como objeto o que destoa das cores da borda (o resto o corte decide) */
+    var cb0 = [], pb0 = [];
+    for (c = 0; c < nc; c++) if (cnt[c] && fixoFundo[c]) { cb0.push(cor[c]); pb0.push(cnt[c]); }
+    if (cb0.length) {
+      var Mb0 = gmm(cb0, pb0, 5), sc = [];
+      for (c = 0; c < nc; c++) if (frente[c]) sc.push(-logp(Mb0, cor[c]));
+      sc.sort(function (a, b) { return a - b; });
+      var corte0 = sc[Math.floor(sc.length * 0.45)];
+      for (c = 0; c < nc; c++) if (frente[c] && -logp(Mb0, cor[c]) < corte0) frente[c] = 0;
+    }
+    var vies = (+$("fundoT").value - 13) / 6, gama = 50;
+    for (var volta = 0; volta < 5; volta++) {
+      var cf = [], pf = [], cb = [], pb = [];
+      for (c = 0; c < nc; c++) { if (!cnt[c]) continue; if (frente[c]) { cf.push(cor[c]); pf.push(cnt[c]); } else { cb.push(cor[c]); pb.push(cnt[c]); } }
+      if (!cf.length || !cb.length) break;
+      var Mf = gmm(cf, pf, 5), Mb = gmm(cb, pb, 8);
+      var G = maxflow(nc + 2), S0 = nc, T0 = nc + 1;
+      for (c = 0; c < nc; c++) {
+        if (!cnt[c]) continue;
+        if (fixoFundo[c]) { G.add(c, T0, 1e12, 0); continue; }
+        var dF = -logp(Mf, cor[c]) * cnt[c] + vies * cnt[c], dB = -logp(Mb, cor[c]) * cnt[c];
+        var mn = Math.min(dF, dB); dF -= mn; dB -= mn;
+        G.add(S0, c, dB, 0); G.add(c, T0, dF, 0);
+      }
+      arestas.forEach(function (e) {
+        var u = cor[e[0]], v = cor[e[1]], dd = (u[0]-v[0])*(u[0]-v[0]) + (u[1]-v[1])*(u[1]-v[1]) + (u[2]-v[2])*(u[2]-v[2]);
+        var wgt = gama * e[2] * Math.exp(-beta * dd);
+        G.add(e[0], e[1], wgt, wgt);
+      });
+      var lado = G.run(S0, T0), mudou = 0;
+      for (c = 0; c < nc; c++) { var f2 = lado[c] && !fixoFundo[c] ? 1 : 0; if (f2 !== frente[c]) mudou++; frente[c] = f2; }
+      if (!mudou) break;
+    }
+    /* sombra: pedaço cinza (sem cor) grudado no fundo sai junto, se o objeto em si for colorido */
+    var cinza = function (c) { return Math.sqrt(cor[c][1]*cor[c][1] + cor[c][2]*cor[c][2]) < 9; };
+    var aF = 0, aC = 0;
+    for (c = 0; c < nc; c++) if (frente[c]) { aF += cnt[c]; if (cinza(c)) aC += cnt[c]; }
+    if (aF && aC / aF < 0.35) {
+      var adj = []; for (c = 0; c < nc; c++) adj.push([]);
+      arestas.forEach(function (e) { adj[e[0]].push(e[1]); adj[e[1]].push(e[0]); });
+      var fila = []; for (c = 0; c < nc; c++) if (!frente[c]) fila.push(c);
+      while (fila.length) { var u4 = fila.pop(); adj[u4].forEach(function (v4) { if (frente[v4] && cinza(v4)) { frente[v4] = 0; fila.push(v4); } }); }
+    }
+    var mask = new Uint8Array(n);
+    for (q = 0; q < n; q++) mask[q] = frente[rot[q]];
+    /* fica só com os pedaços grandes e fecha os buracos internos (olho, nariz) */
+    var comp = new Int32Array(n).fill(-1), tams = [];
+    for (q = 0; q < n; q++) {
+      if (!mask[q] || comp[q] > -1) continue;
+      var id = tams.length, pilha = [q], tt = 0; comp[q] = id;
+      while (pilha.length) { var u2 = pilha.pop(); tt++; var ux = u2 % w; [ux > 0 ? u2 - 1 : -1, ux < w - 1 ? u2 + 1 : -1, u2 - w, u2 + w].forEach(function (v2) { if (v2 >= 0 && v2 < n && mask[v2] && comp[v2] < 0) { comp[v2] = id; pilha.push(v2); } }); }
+      tams.push(tt);
+    }
+    var maior = Math.max.apply(null, tams.concat([0])); if (!maior) return null;
+    for (q = 0; q < n; q++) if (mask[q] && tams[comp[q]] < maior * 0.2) mask[q] = 0;
+    var fora = new Uint8Array(n), pil = [];
+    for (q = 0; q < n; q++) { var px2 = q % w, py2 = (q / w) | 0; if ((px2 === 0 || py2 === 0 || px2 === w - 1 || py2 === h - 1) && !mask[q]) { fora[q] = 1; pil.push(q); } }
+    while (pil.length) { var u3 = pil.pop(), u3x = u3 % w; [u3x > 0 ? u3 - 1 : -1, u3x < w - 1 ? u3 + 1 : -1, u3 - w, u3 + w].forEach(function (v3) { if (v3 >= 0 && v3 < n && !mask[v3] && !fora[v3]) { fora[v3] = 1; pil.push(v3); } }); }
+    for (q = 0; q < n; q++) if (!mask[q] && !fora[q]) mask[q] = 1;
+    var minX = w, maxX = -1, minY = h, maxY = -1;
+    for (q = 0; q < n; q++) if (mask[q]) { var mx = q % w, my = (q / w) | 0; if (mx < minX) minX = mx; if (mx > maxX) maxX = mx; if (my < minY) minY = my; if (my > maxY) maxY = my; }
+    if (maxX < 0) return null;
+    return { w: w, h: h, mask: mask, area: area, bx: [minX, minY, maxX - minX + 1, maxY - minY + 1] };
+  }
+
   /* ---------- geração ---------- */
   var ultimoModo = "";
   function gerar() {
@@ -473,41 +649,104 @@
     if (modo !== "foto") {
       if (!fonte || fonte.quad !== $("quad").checked || fonte.rec !== String(recorte)) { fonte = lerFonte(); fonte.quad = $("quad").checked; fonte.rec = String(recorte); fonte.grade = detectarGrade(fonte); }
       var g = fonte.grade;
-      if (g && (modo === "pixel" || g.conf > 3.2)) { am = amostrasPixel(fonte, g); usado = "pixel"; }
+      if (g && (modo === "pixel" || g.conf > 3.2)) {
+        am = amostrasPixel(fonte, g); usado = "pixel";
+        if (modo !== "pixel") { var cheias = 0; for (var q0 = 0; q0 < am.vazio.length; q0++) if (!am.vazio[q0]) cheias++; if (cheias < 4) { am = null; usado = "foto"; } }
+      }
       else if (modo === "pixel") { aviso("Não encontrei uma grade nessa imagem. Usei o modo foto."); }
     }
+    var segOk = false;
     if (!am) {
-      var area = areaBase();
-      if ($("fundo").checked) area = areaObjeto(area);
+      var area = areaBase(), sg = null;
+      if ($("fundo").checked) {
+        sg = segmentar(area);
+        if (sg) {
+          var fx = area[2] / sg.w, fy = area[3] / sg.h;
+          area = [area[0] + Math.max(0, sg.bx[0] - 1) * fx, area[1] + Math.max(0, sg.bx[1] - 1) * fy, Math.min(sg.w, sg.bx[2] + 2) * fx, Math.min(sg.h, sg.bx[3] + 2) * fy];
+        }
+      }
       var Wc = Math.max(4, largura - (usarC ? 2 : 0)), Hc = Math.min(120, Math.max(4, Math.round(Wc * area[3] / area[2])));
       am = amostrasFoto(area, Wc, Hc);
+      if (sg) {
+        /* conta fica vazia se a maior parte dela é fundo no recorte */
+        var ex = sg.area[2] / sg.w, ey = sg.area[3] / sg.h;
+        for (var cy = 0; cy < Hc; cy++) for (var cx = 0; cx < Wc; cx++) {
+          var dentro = 0, tot = 0;
+          for (var sy = 0; sy < 4; sy++) for (var sx = 0; sx < 4; sx++) {
+            var X = area[0] + (cx + (sx + 0.5) / 4) * area[2] / Wc, Y = area[1] + (cy + (sy + 0.5) / 4) * area[3] / Hc;
+            var mx = Math.floor((X - sg.area[0]) / ex), my = Math.floor((Y - sg.area[1]) / ey);
+            tot++; if (mx >= 0 && my >= 0 && mx < sg.w && my < sg.h && sg.mask[my * sg.w + mx]) dentro++;
+          }
+          if (dentro / tot < 0.5) am.vazio[cy * Wc + cx] = 1;
+        }
+        segOk = true;
+      }
     }
     ultimoModo = usado;
     var Wt = am.W, Ht = am.H, n = Wt * Ht, ns = am.ns, med = mediaCelulas(am), vazio = am.vazio;
-    if ($("fundo").checked) { if (usado === "pixel") mascaraPixel(med, vazio, Wt, Ht); else mascara(med, vazio, Wt, Ht); }
+    if ($("fundo").checked) { if (usado === "pixel") mascaraPixel(med, vazio, Wt, Ht); else if (!segOk) mascara(med, vazio, Wt, Ht); }
 
-    /* distância de cada amostra a cada cor (calculada uma vez) */
-    var D = new Float32Array(n * ns * NP);
-    for (var i = 0; i < n; i++) {
-      if (vazio[i]) continue;
-      for (var j = 0; j < ns; j++) {
-        var o = (i*ns + j) * 3, base = (i*ns + j) * NP;
-        for (var c = 0; c < NP; c++) D[base + c] = dist(am.s[o], am.s[o+1], am.s[o+2], PLAB[c][0], PLAB[c][1], PLAB[c][2]);
+    /* cores mais vivas: a foto sai mais apagada que as contas */
+    /* e a luz da foto (lado na sombra, reflexo) deixa o objeto com 3 tons onde devia ter 1: aproxima os tons claros da média */
+    if (usado !== "pixel" && $("vivas").checked) {
+      var sL = 0, nL = 0, vi;
+      for (i = 0; i < n; i++) if (!vazio[i]) for (j = 0; j < ns; j++) { var Lx = am.s[(i*ns + j) * 3]; if (Lx > 35) { sL += Lx; nL++; } }
+      var mL = nL ? sL / nL : 60;
+      for (i = 0; i < n; i++) if (!vazio[i]) for (j = 0; j < ns; j++) {
+        vi = (i*ns + j) * 3;
+        if (am.s[vi] > 35) am.s[vi] = Math.max(35, mL + (am.s[vi] - mL) * 0.7);
+        am.s[vi+1] *= 1.15; am.s[vi+2] *= 1.15;
       }
+    }
+    /* foto: agrupa as cores do objeto (k-means) antes de escolher a conta, pra não virar "chuvisco" */
+    var grupo = null, cent = null, nG = 0, D = null, i, j, c, o;
+    if (ns > 1) {
+      var idx = [];
+      for (i = 0; i < n; i++) if (!vazio[i]) for (j = 0; j < ns; j++) idx.push(i*ns + j);
+      nG = Math.max(4, Math.min(18, +$("maxC").value + 4));
+      var passoA = Math.max(1, Math.floor(idx.length / 15000)), am2 = [];
+      for (i = 0; i < idx.length; i += passoA) am2.push(idx[i]);
+      var k;
+      /* começa pelos tons mais distantes entre si: olho e nariz pequenos ganham grupo próprio */
+      cent = [];
+      if (am2.length) {
+        var dmin2 = new Float64Array(am2.length).fill(1e18), e0 = am2[Math.floor(am2.length / 2)] * 3;
+        cent.push([am.s[e0], am.s[e0+1], am.s[e0+2]]);
+        while (cent.length < nG) {
+          var cu = cent[cent.length - 1], best = -1, bi = 0;
+          for (var q2 = 0; q2 < am2.length; q2++) { var e1 = am2[q2] * 3, a1 = am.s[e1] - cu[0], b1 = am.s[e1+1] - cu[1], c1 = am.s[e1+2] - cu[2], dd2 = a1*a1 + b1*b1 + c1*c1; if (dd2 < dmin2[q2]) dmin2[q2] = dd2; if (dmin2[q2] > best) { best = dmin2[q2]; bi = q2; } }
+          if (best < 4) break;
+          e1 = am2[bi] * 3; cent.push([am.s[e1], am.s[e1+1], am.s[e1+2]]);
+        }
+      }
+      nG = cent.length;
+      grupo = new Uint8Array(n * ns);
+      function maisPertoG(e) { var m = 1e18, mi = 0; for (var k2 = 0; k2 < nG; k2++) { var a1 = am.s[e*3] - cent[k2][0], b1 = am.s[e*3+1] - cent[k2][1], c1 = am.s[e*3+2] - cent[k2][2], dd = a1*a1 + b1*b1 + c1*c1; if (dd < m) { m = dd; mi = k2; } } return mi; }
+      for (var it2 = 0; it2 < 10; it2++) {
+        var sm = []; for (k = 0; k < nG; k++) sm.push([0, 0, 0, 0]);
+        am2.forEach(function (e) { var g3 = maisPertoG(e); sm[g3][0] += am.s[e*3]; sm[g3][1] += am.s[e*3+1]; sm[g3][2] += am.s[e*3+2]; sm[g3][3]++; });
+        for (k = 0; k < nG; k++) if (sm[k][3]) cent[k] = [sm[k][0]/sm[k][3], sm[k][1]/sm[k][3], sm[k][2]/sm[k][3]];
+      }
+      idx.forEach(function (e) { grupo[e] = maisPertoG(e); });
+    } else {
+      D = new Float32Array(n * NP);
+      for (i = 0; i < n; i++) { if (vazio[i]) continue; o = i * 3; for (c = 0; c < NP; c++) D[i*NP + c] = dist(am.s[o], am.s[o+1], am.s[o+2], PLAB[c][0], PLAB[c][1], PLAB[c][2]); }
     }
     var permitidas = []; ativas.forEach(function (on, i) { if (on) permitidas.push(i); });
     if (!permitidas.length) permitidas = [0, 1];
     var g2 = new Int16Array(n);
     var det = +$("det").value;
     function escolher(conj) {
-      var votos = new Float32Array(NP);
+      var votos = new Float32Array(NP), mapa = null;
+      if (grupo) mapa = cent.map(function (cc) { var m = 1e18, mi = conj[0]; conj.forEach(function (p) { var dd = dist(cc[0], cc[1], cc[2], PLAB[p][0], PLAB[p][1], PLAB[p][2]); if (dd < m) { m = dd; mi = p; } }); return mi; });
       for (var i = 0; i < n; i++) {
         if (vazio[i]) { g2[i] = -1; continue; }
         votos.fill(0);
         var Lm = med[i*3];
         for (var j = 0; j < ns; j++) {
-          var base = (i*ns + j) * NP, m = 1e18, mi = conj[0];
-          for (var t = 0; t < conj.length; t++) { var dd = D[base + conj[t]]; if (dd < m) { m = dd; mi = conj[t]; } }
+          var mi = conj[0];
+          if (grupo) mi = mapa[grupo[i*ns + j]];
+          else { var base = i * NP, m = 1e18; for (var t = 0; t < conj.length; t++) { var dd = D[base + conj[t]]; if (dd < m) { m = dd; mi = conj[t]; } } }
           /* detalhe escuro (olho, contorno) pesa mais pra não sumir */
           var so = (i*ns + j) * 3, Ls = am.s[so], peso = 1 + Math.max(0, (Lm - Ls) / 30);
           /* realçar detalhes: cor bem diferente do resto da conta (sementinha, bochecha) ganha peso */
