@@ -158,7 +158,7 @@
     ["Laranja-escuro","#D45A1C"],["Amarelo","#FFD23F"],["Amarelo-claro","#FFF0A6"],["Verde","#39B54A"],["Verde-escuro","#1F7A3A"],
     ["Verde-claro","#A6E07B"],["Azul","#2F6FD6"],["Azul-claro","#8DCBF3"],["Rosa","#F25C9A"],["Rosa-claro","#F9B9D2"],
     ["Roxo","#7B3FD1"],["Lilás","#C8A8F0"],["Marrom","#8A5A2E"],["Marrom-escuro","#5A3518"],["Caramelo","#D79650"],
-    ["Bege","#F3D4A8"],["Cinza","#9C99A6"],["Cinza-claro","#D5D3DA"]
+    ["Bege","#F3D4A8"],["Cinza-escuro","#5E5B66"],["Cinza","#9C99A6"],["Cinza-claro","#D5D3DA"]
   ];
   var PLACA = 29;
   var $ = function (id) { return document.getElementById(id); };
@@ -631,6 +631,12 @@
     }
     var maior = Math.max.apply(null, tams.concat([0])); if (!maior) return null;
     for (q = 0; q < n; q++) if (mask[q] && tams[comp[q]] < maior * 0.2) mask[q] = 0;
+    /* objeto picado em pedaços parecidos ou minúsculo: a foto não tem um fundo separado (retrato, cena) */
+    var totF = 0; tams.forEach(function (t) { if (t >= maior * 0.2) totF += t; });
+    var bx0 = w, bx1 = -1, by0 = h, by1 = -1;
+    for (q = 0; q < n; q++) if (mask[q]) { var qx5 = q % w, qy5 = (q / w) | 0; if (qx5 < bx0) bx0 = qx5; if (qx5 > bx1) bx1 = qx5; if (qy5 < by0) by0 = qy5; if (qy5 > by1) by1 = qy5; }
+    var ench = bx1 < 0 ? 0 : totF / ((bx1 - bx0 + 1) * (by1 - by0 + 1));
+    if (maior < totF * 0.6 || totF < n * 0.04 || ench < 0.45) return { inteiro: true };
     var fora = new Uint8Array(n), pil = [];
     for (q = 0; q < n; q++) { var px2 = q % w, py2 = (q / w) | 0; if ((px2 === 0 || py2 === 0 || px2 === w - 1 || py2 === h - 1) && !mask[q]) { fora[q] = 1; pil.push(q); } }
     while (pil.length) { var u3 = pil.pop(), u3x = u3 % w; [u3x > 0 ? u3 - 1 : -1, u3x < w - 1 ? u3 + 1 : -1, u3 - w, u3 + w].forEach(function (v3) { if (v3 >= 0 && v3 < n && !mask[v3] && !fora[v3]) { fora[v3] = 1; pil.push(v3); } }); }
@@ -645,7 +651,7 @@
   var ultimoModo = "";
   function gerar() {
     if (!img) return;
-    var am = null, usado = "foto", usarC = $("contorno").checked;
+    var am = null, usado = "foto", usarC = $("contorno").checked, msgFim = "";
     if (modo !== "foto") {
       if (!fonte || fonte.quad !== $("quad").checked || fonte.rec !== String(recorte)) { fonte = lerFonte(); fonte.quad = $("quad").checked; fonte.rec = String(recorte); fonte.grade = detectarGrade(fonte); }
       var g = fonte.grade;
@@ -653,13 +659,14 @@
         am = amostrasPixel(fonte, g); usado = "pixel";
         if (modo !== "pixel") { var cheias = 0; for (var q0 = 0; q0 < am.vazio.length; q0++) if (!am.vazio[q0]) cheias++; if (cheias < 4) { am = null; usado = "foto"; } }
       }
-      else if (modo === "pixel") { aviso("Não encontrei uma grade nessa imagem. Usei o modo foto."); }
+      else if (modo === "pixel") { msgFim = "Não encontrei uma grade nessa imagem. Usei o modo foto."; }
     }
-    var segOk = false;
+    var segOk = false, semFundo = false;
     if (!am) {
       var area = areaBase(), sg = null;
       if ($("fundo").checked) {
         sg = segmentar(area);
+        if (sg && sg.inteiro) { sg = null; semFundo = true; }
         if (sg) {
           var fx = area[2] / sg.w, fy = area[3] / sg.h;
           area = [area[0] + Math.max(0, sg.bx[0] - 1) * fx, area[1] + Math.max(0, sg.bx[1] - 1) * fy, Math.min(sg.w, sg.bx[2] + 2) * fx, Math.min(sg.h, sg.bx[3] + 2) * fy];
@@ -684,15 +691,37 @@
     }
     ultimoModo = usado;
     var Wt = am.W, Ht = am.H, n = Wt * Ht, ns = am.ns, med = mediaCelulas(am), vazio = am.vazio;
-    if ($("fundo").checked) { if (usado === "pixel") mascaraPixel(med, vazio, Wt, Ht); else if (!segOk) mascara(med, vazio, Wt, Ht); }
+    if ($("fundo").checked) { if (usado === "pixel") mascaraPixel(med, vazio, Wt, Ht); else if (!segOk) {
+      /* sem objeto separado: só tira o fundo se a borda for de uma cor só; senão usa a foto inteira */
+      var bb = [], mb = [0, 0, 0];
+      for (var bx2 = 0; bx2 < Wt; bx2++) { bb.push(bx2); bb.push((Ht - 1) * Wt + bx2); }
+      for (var by2 = 1; by2 < Ht - 1; by2++) { bb.push(by2 * Wt); bb.push(by2 * Wt + Wt - 1); }
+      bb.forEach(function (k) { mb[0] += med[k*3]; mb[1] += med[k*3+1]; mb[2] += med[k*3+2]; });
+      mb = mb.map(function (v) { return v / bb.length; });
+      var perto = 0; bb.forEach(function (k) { if (Math.sqrt(Math.pow(med[k*3]-mb[0], 2) + Math.pow(med[k*3+1]-mb[1], 2) + Math.pow(med[k*3+2]-mb[2], 2)) < 12) perto++; });
+      if (!semFundo || perto / bb.length > 0.92) mascara(med, vazio, Wt, Ht);
+      else msgFim = ("Essa foto não tem um fundo separado do objeto, então usei a foto inteira. Pra pegar só uma parte, arraste o dedo na foto.");
+    } }
 
     /* cores mais vivas: a foto sai mais apagada que as contas */
     /* e a luz da foto (lado na sombra, reflexo) deixa o objeto com 3 tons onde devia ter 1: aproxima os tons claros da média */
     if (usado !== "pixel" && $("vivas").checked) {
       var sL = 0, nL = 0, vi;
       for (i = 0; i < n; i++) if (!vazio[i]) for (j = 0; j < ns; j++) { var Lx = am.s[(i*ns + j) * 3]; if (Lx > 35) { sL += Lx; nL++; } }
-      var mL = nL ? sL / nL : 60;
-      for (i = 0; i < n; i++) if (!vazio[i]) for (j = 0; j < ns; j++) {
+      var mL = nL ? sL / nL : 60, Ls = [], sC = 0, nC = 0;
+      for (i = 0; i < n; i++) if (!vazio[i]) for (j = 0; j < ns; j++) { vi = (i*ns + j) * 3; Ls.push(am.s[vi]); sC += Math.sqrt(am.s[vi+1]*am.s[vi+1] + am.s[vi+2]*am.s[vi+2]); nC++; }
+      if (nC && sC / nC < 10) {
+        /* foto preto e branco: estica do mais escuro ao mais claro, pra usar preto, os 3 cinzas e o branco */
+        Ls.sort(function (a, b) { return a - b; });
+        var p2 = Ls[Math.floor(Ls.length * 0.02)], p98 = Ls[Math.floor(Ls.length * 0.98)], fa = 88 / Math.max(20, p98 - p2);
+        /* metade esticada, metade equalizada: foto escura (noite, fundo preto) ganha os tons do meio em vez de virar tudo preto */
+        var NL = Ls.length, busca = function (v) { var lo = 0, hi = NL; while (lo < hi) { var md2 = (lo + hi) >> 1; if (Ls[md2] < v) lo = md2 + 1; else hi = md2; } return lo / NL; };
+        for (i = 0; i < n; i++) if (!vazio[i]) for (j = 0; j < ns; j++) {
+          vi = (i*ns + j) * 3;
+          var lin = Math.min(98, Math.max(5, 8 + (am.s[vi] - p2) * fa)), eq = 5 + 93 * busca(am.s[vi]);
+          am.s[vi] = 0.4 * lin + 0.6 * eq; am.s[vi+1] = 0; am.s[vi+2] = 0;
+        }
+      } else for (i = 0; i < n; i++) if (!vazio[i]) for (j = 0; j < ns; j++) {
         vi = (i*ns + j) * 3;
         if (am.s[vi] > 35) am.s[vi] = Math.max(35, mL + (am.s[vi] - mL) * 0.7);
         am.s[vi+1] *= 1.15; am.s[vi+2] *= 1.15;
@@ -828,7 +857,7 @@
     var rec = [];
     for (var y7 = minY; y7 <= maxY; y7++) { var linha = []; for (var x7 = minX; x7 <= maxX; x7++) linha.push(g2[y7*Wt + x7]); rec.push(linha); }
     grade = rec; W = maxX - minX + 1; H = maxY - minY + 1; historico = [];
-    aviso(usado === "pixel" ? "✨ Encontrei a grade da imagem: cada quadradinho virou uma conta, no tamanho original. Pra mudar o tamanho, escolha \"Foto\"." : "");
+    aviso(usado === "pixel" ? "✨ Encontrei a grade da imagem: cada quadradinho virou uma conta, no tamanho original. Pra mudar o tamanho, escolha \"Foto\"." : msgFim);
     mostrar();
   }
   function aviso(t) { var a = $("aviso"); a.textContent = t; a.style.display = t ? "block" : "none"; }
