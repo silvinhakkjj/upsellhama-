@@ -136,60 +136,10 @@
   </div>
 </main>
 
+<script src="/back-redirect.js"></script>
 <script>
-(function () {
-  "use strict";
-  var OFERTA = "/oferta2";
-  var MAX_MS = 30 * 60 * 1000;
-  var CHAVES = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "src", "sck", "fbclid"];
-  var sim = document.getElementById("sim");
-  function ss(fn) { try { return fn(); } catch (e) { return null; } }
-  function queryLimpa() { var p = new URLSearchParams(location.search); p.delete("cr_bk"); var q = p.toString(); return q ? "?" + q : ""; }
-  function comUtms(href) {
-    try {
-      var u = new URL(href, location.href), atual = new URLSearchParams(location.search);
-      CHAVES.forEach(function (k) { var v = atual.get(k); if (v && !u.searchParams.has(k)) u.searchParams.set(k, v); });
-      return u.toString();
-    } catch (e) { return href; }
-  }
-  function irOferta() { ss(function () { sessionStorage.setItem("cr_back_visto", "1"); }); location.replace(OFERTA + queryLimpa()); }
-
-  document.addEventListener("click", function (e) {
-    var a = e.target.closest && e.target.closest("a[href]"); if (!a) return;
-    if (a.id === "nao") { a.href = comUtms(a.getAttribute("href")); ss(function () { sessionStorage.setItem("cr_back_visto", "1"); }); return; }
-    if (a.id !== "sim") return;
-    a.href = comUtms(a.getAttribute("href"));
-    var chave = Math.random().toString(36).slice(2, 10);
-    ss(function () { sessionStorage.setItem("cr_bk", chave); sessionStorage.setItem("cr_bk_t", String(Date.now())); });
-    var p = new URLSearchParams(location.search); p.set("cr_bk", chave);
-    history.replaceState(history.state, "", location.pathname + "?" + p.toString() + location.hash);
-  }, true);
-
-  function checarVolta(persisted) {
-    var chave = new URLSearchParams(location.search).get("cr_bk"); if (!chave) return;
-    var nav = ss(function () { return performance.getEntriesByType("navigation")[0]; });
-    var voltou = persisted || (nav && nav.type === "back_forward");
-    var salva = ss(function () { return sessionStorage.getItem("cr_bk"); });
-    var t = Number(ss(function () { return sessionStorage.getItem("cr_bk_t"); }) || 0);
-    if (voltou && chave === salva && Date.now() - t <= MAX_MS) {
-      ss(function () { sessionStorage.removeItem("cr_bk"); sessionStorage.removeItem("cr_bk_t"); });
-      irOferta();
-    } else {
-      history.replaceState(history.state, "", location.pathname + queryLimpa() + location.hash);
-    }
-  }
-  checarVolta(false);
-  window.addEventListener("pageshow", function (ev) { if (ev.persisted) checarVolta(true); });
-
-  var armado = false;
-  function armar() { if (armado) return; armado = true; history.pushState({ crBack: 1 }, "", location.href); }
-  ["pointerdown", "touchstart", "keydown"].forEach(function (ev) { window.addEventListener(ev, armar, { once: true, passive: true }); });
-  window.addEventListener("popstate", function () {
-    if (!armado) return;
-    if (ss(function () { return sessionStorage.getItem("cr_back_visto"); })) { history.back(); return; }
-    irOferta();
-  });
-})();
+/* Back redirect com chave + UTMs: config em /back-redirect.js */
+backRedirect({ prefixo: "ab2_", rotaDestino: "/oferta2", checkout: "QQLZxo87QF94dgCXGid787" });
 </script>
 </body>
 </html>
