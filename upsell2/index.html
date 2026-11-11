@@ -22,7 +22,12 @@
   h2{font-size:22px;text-align:center;margin:30px 0 12px}
   .hl{color:var(--rosa)}
   .sub{text-align:center;color:var(--roxo-2);margin-bottom:18px}
-  .tela{display:block;width:100%;max-width:400px;height:auto;margin:0 auto 6px;border-radius:8px;border:1px solid var(--borda);box-shadow:0 6px 20px rgba(42,31,61,.10)}
+  .demo{display:block;width:100%;height:auto;margin:0 auto 6px;border-radius:8px;border:1px solid var(--borda)}
+  .chips{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin:-6px 0 18px}
+  .chips span{background:#fff;border:1px solid #F4A261;border-radius:20px;padding:4px 11px;font-size:13px;font-weight:800}
+  .bloco2{background:#fff;border:1px solid var(--borda);border-radius:8px;padding:16px;margin-top:22px}
+  .bloco2 h3{font-size:19px;margin-bottom:6px;text-align:center}
+  .bloco2 p{font-size:15px;color:var(--roxo-2);text-align:center;margin-bottom:12px}
   .cap{text-align:center;font-size:12px;color:var(--cinza);margin-bottom:18px}
   .btn{display:block;width:100%;border-radius:8px;background:var(--rosa);color:#fff;font-family:Fredoka,Arial,sans-serif;font-size:19px;font-weight:700;padding:16px;text-align:center;text-decoration:none;box-shadow:0 4px 0 var(--rosa-esc)}
   .btn:active{transform:translateY(2px);box-shadow:0 2px 0 var(--rosa-esc)}
@@ -64,9 +69,10 @@
   <h1>Transforme qualquer foto num <span class="hl">molde pronto pra montar</span></h1>
   <p class="sub">O pet, o filho, o casal, o desenho da criança. Você envia a foto, escolhe o tamanho e as cores que tem em casa, e o Criador monta a grade com a quantidade de cada conta.</p>
 
-  <img class="tela" src="/criador-tela.webp" alt="Tela do Criador de Moldes com uma foto transformada em molde" width="792" height="1250">
-  <p class="cap">Tela real do Criador: uma foto virou um molde de 22 × 25 contas</p>
+  <img class="demo" src="/criador-demo.webp" alt="Um desenho de morango virando molde e peça de contas" width="1520" height="630">
+  <p class="cap">Resultado real do Criador: o desenho virou um molde de 28 × 37 contas, com a contagem de cada cor</p>
 
+  <div class="chips"><span>📱 No celular</span><span>🎨 Só as suas cores</span><span>🔢 Contagem automática</span><span>🖨️ Tamanho real</span></div>
   <a class="btn" href="#oferta" onclick="event.preventDefault();document.getElementById('oferta').scrollIntoView({behavior:'smooth'})">QUERO O CRIADOR</a>
 
   <h2>Do celular, em <span class="hl">3 passos</span></h2>
@@ -76,13 +82,22 @@
     <div><b>3</b>Corrija e imprima</div>
   </div>
 
+  <div class="bloco2">
+    <h3>Também lê moldes e pixel art</h3>
+    <p>Mandou o print de um molde ou de um desenho em pixel? O Criador acha a grade sozinho e lê quadradinho por quadradinho, com a cor e a contagem certas.</p>
+    <img class="demo" src="/criador-pixel.webp" alt="Print de um molde lido conta por conta pelo Criador" width="898" height="630" loading="lazy">
+  </div>
+
   <h2>O que o Criador faz</h2>
   <ul class="itens">
     <li><b>Do chaveiro ao quadro:</b> você escolhe a largura, de 15 contas até 4 placas ou mais</li>
     <li><b>Só as cores que você tem:</b> desmarca as que faltam e ele monta o molde sem elas</li>
     <li><b>Contagem automática</b> de cada cor e do total de contas</li>
-    <li><b>Remove o fundo</b> da foto e põe contorno preto, se você quiser</li>
-    <li><b>Correção conta por conta:</b> toca na cor e pinta, com borracha e desfazer</li>
+    <li><b>Enquadra com o dedo:</b> você marca na foto só o que quer transformar</li>
+    <li><b>Remove o fundo</b> e põe contorno preto, se você quiser</li>
+    <li><b>Realça os detalhes</b> pra olho, boca e bochecha não sumirem</li>
+    <li><b>Correção conta por conta:</b> toca na cor e pinta, com borracha, "apagar área" e desfazer</li>
+    <li><b>Ver como peça pronta:</b> mostra o molde em continhas antes de você montar</li>
     <li><b>Imprime no tamanho real</b> pra conta Mini ou Midi, dividindo em folhas A4 quando for grande</li>
     <li><b>Baixa a imagem</b> do molde com a lista de cores</li>
   </ul>
@@ -114,7 +129,8 @@
   <h2>Perguntas rápidas</h2>
   <div class="faq">
     <details><summary>Preciso instalar alguma coisa?</summary><p>Não. Abre no navegador do celular ou do computador. A foto é processada no seu aparelho e não é enviada pra lugar nenhum.</p></details>
-    <details><summary>Funciona com qualquer foto?</summary><p>Funciona melhor com um objeto só, fundo liso e boa luz. Foto com muito detalhe precisa de um tamanho maior, e às vezes de um retoque conta por conta, que você faz no próprio Criador.</p></details>
+    <details><summary>Funciona com qualquer foto?</summary><p>Funciona melhor com um objeto só, fundo liso e boa luz. Em foto com fundo cheio de coisa, você marca o objeto com o dedo e apaga o que sobrou com um toque. Foto com muito detalhe pede um tamanho maior.</p></details>
+    <details><summary>Serve pra print de molde ou de pixel art?</summary><p>Serve. O Criador acha a grade da imagem e lê cada quadradinho como uma conta, com a cor certa e a contagem.</p></details>
     <details><summary>Posso usar foto de personagem famoso?</summary><p>Pra montar pra você, pode. Mas personagem de desenho, jogo ou time tem dono: não venda peças com eles. Pra vender, use fotos de pets, pessoas (com autorização) e desenhos próprios.</p></details>
     <details><summary>Como recebo?</summary><p>Na hora, no mesmo acesso dos moldes, com aviso no WhatsApp e no e-mail.</p></details>
   </div>
